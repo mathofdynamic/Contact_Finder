@@ -1,0 +1,7 @@
+flask==2.0.1
+selenium==4.1.0
+beautifulsoup4==4.10.0
+python-dotenv==0.19.2
+requests==2.27.1
+gspread==5.1.1
+oauth2client==4.1.3 
