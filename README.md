@@ -18,6 +18,126 @@ Contact Extractor is a powerful API service that automatically extracts contact 
 
 The service provides multiple endpoints for different use cases, from single domain processing to batch processing via CSV or Google Sheets integration.
 
+---
+
+## 📸 Screenshots & Live Examples
+
+### 1. Single Domain Request
+
+**Request Example:**
+```json
+{
+  "url": "https://droplinked.com/"
+}
+```
+**Response Example:**
+```json
+{
+  "csv_filename": "single_domain_1746616778.csv",
+  "message": "Processed 1 domain. CSV generated.",
+  "results": [
+    {
+      "domain": "droplinked.com",
+      "emails": ["support@droplinked.com"],
+      "facebook": "",
+      "instagram": "https://www.instagram.com/drop_linked",
+      "linkedin": "https://www.linkedin.com/company/droplinked",
+      "other": [
+        "https://discord.com/channels/...",
+        "https://t.me/droplinked"
+      ],
+      "phones": [],
+      "x": "https://twitter.com/droplinked"
+    }
+  ],
+  "success": true
+}
+```
+![Single Domain Request Screenshot](screenshots/Contact_extractor_single_Request.png)
+*Figure: Example of a single domain extraction request and response.*
+
+---
+
+### 2. Array Request
+
+**Request Example:**
+```json
+{
+  "domains": [
+    "https://www.digikala.com/",
+    "https://droplinked.com/",
+    "https://flatlay.io/"
+  ],
+  "max_workers": 3
+}
+```
+**Response Example:**
+```json
+{
+  "csv_filename": "array_domains_1746597667.csv",
+  "message": "Processed 3 domains.",
+  "results": [
+    { "domain": "digikala.com", ... },
+    { "domain": "droplinked.com", ... },
+    { "domain": "flatlay.io", ... }
+  ]
+}
+```
+![Array Request Screenshot](screenshots/Contact_extractor_Array.png)
+*Figure: Example of processing multiple domains in a single request.*
+
+---
+
+### 3. CSV Request
+
+**Request Example:**
+```json
+{
+  "csv_url": "https://storage3.fastupload.io/6e54370ba070c37a/test-_.Sheet1.csv?...",
+  "max_workers": 5
+}
+```
+**Response Example:**
+```json
+{
+  "csv_filename": "csv_import_domains_1746616971.csv",
+  "message": "Processed 20 domains. Extracted 20 domain(s) from CSV.",
+  "results": [
+    { "domain": "impactcanopy.com", ... },
+    ...
+  ]
+}
+```
+![CSV Request Screenshot](screenshots/Contact_extractor_CSV_request.png)
+*Figure: Example of extracting contacts from a CSV file of domains.*
+
+---
+
+### 4. Sheet Request
+
+**Request Example:**
+```json
+{
+  "target_url": "https://docs.google.com/spreadsheets/d/...",
+  "max_workers": 10
+}
+```
+**Response Example:**
+```json
+{
+  "csv_filename": "sheet_import_domains_1746616351.csv",
+  "message": "Processed 20 domains. Received 20 domain(s) from sheet worker.",
+  "results": [
+    { "domain": "impactcanopy.com", ... },
+    ...
+  ]
+}
+```
+![Sheet Request Screenshot](screenshots/Contact_extractor_Sheet.png)
+*Figure: Example of extracting contacts from a Google Sheet of domains.*
+
+---
+
 ## ✨ Features
 
 - 🔍 **Intelligent Contact Detection**
@@ -93,18 +213,6 @@ api-key: your_api_key
 }
 ```
 
-**Response:**
-```json
-{
-    "success": true,
-    "message": "Processed 1 domain. CSV generated.",
-    "csv_filename": "single_domain_1234567890.csv",
-    "results": [...]
-}
-```
-
-![Single Request Example](screenshots/Contact_extractor_single_Request.png)
-
 #### 2. Array Request
 Process multiple domains in parallel.
 
@@ -119,8 +227,6 @@ api-key: your_api_key
     "max_workers": 5
 }
 ```
-
-![Array Request Example](screenshots/Contact_extractor_Array.png)
 
 #### 3. CSV Request
 Process domains from a CSV file.
@@ -138,8 +244,6 @@ api-key: your_api_key
 }
 ```
 
-![CSV Request Example](screenshots/Contact_extractor_CSV_request.png)
-
 #### 4. Sheet Request
 Process domains from a Google Sheet.
 
@@ -154,8 +258,6 @@ api-key: your_api_key
     "max_workers": 5
 }
 ```
-
-![Sheet Request Example](screenshots/Contact_extractor_Sheet.png)
 
 #### 5. Download CSV
 Download generated CSV files.
