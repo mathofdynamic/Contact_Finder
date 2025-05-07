@@ -1,7 +1,7 @@
 # Contact Extractor API
 
 <div align="center">
-  <img src="screenshots/Contact_extractor_single_Request.png" alt="Contact Extractor Logo" width="600"/>
+  <img src="https://github.com/mathofdynamic/Contact_Finder/blob/main/Screenshots/Contact_extractor_single_Request.png" alt="Contact Extractor Logo" width="600"/>
   
   [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
   [![Flask](https://img.shields.io/badge/flask-2.0%2B-green.svg)](https://flask.palletsprojects.com/)
@@ -53,7 +53,7 @@ The service provides multiple endpoints for different use cases, from single dom
   "success": true
 }
 ```
-![Single Domain Request Screenshot](screenshots/Contact_extractor_single_Request.png)
+![Single Domain Request Screenshot](https://github.com/mathofdynamic/Contact_Finder/blob/main/Screenshots/Contact_extractor_single_Request.png)
 *Figure: Example of a single domain extraction request and response.*
 
 ---
@@ -83,7 +83,7 @@ The service provides multiple endpoints for different use cases, from single dom
   ]
 }
 ```
-![Array Request Screenshot](screenshots/Contact_extractor_Array.png)
+![Array Request Screenshot](https://github.com/mathofdynamic/Contact_Finder/blob/main/Screenshots/Contact_extractor_Array.png?raw=true)
 *Figure: Example of processing multiple domains in a single request.*
 
 ---
@@ -108,7 +108,7 @@ The service provides multiple endpoints for different use cases, from single dom
   ]
 }
 ```
-![CSV Request Screenshot](screenshots/Contact_extractor_CSV_request.png)
+![CSV Request Screenshot](https://github.com/mathofdynamic/Contact_Finder/blob/main/Screenshots/Contact_extractor_CSV_request.png)
 *Figure: Example of extracting contacts from a CSV file of domains.*
 
 ---
@@ -133,7 +133,7 @@ The service provides multiple endpoints for different use cases, from single dom
   ]
 }
 ```
-![Sheet Request Screenshot](screenshots/Contact_extractor_Sheet.png)
+![Sheet Request Screenshot](https://github.com/mathofdynamic/Contact_Finder/blob/main/Screenshots/Contact_extractor_Sheet.png)
 *Figure: Example of extracting contacts from a Google Sheet of domains.*
 
 ---
