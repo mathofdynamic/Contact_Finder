@@ -1,234 +1,222 @@
-# Contact Extractor
+# Contact Extractor API
 
-A powerful web scraping API service designed to extract contact information (emails, phone numbers) and social media links from websites.
+<div align="center">
+  <img src="screenshots/Contact_extractor_single_Request.png" alt="Contact Extractor Logo" width="600"/>
+  
+  [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
+  [![Flask](https://img.shields.io/badge/flask-2.0%2B-green.svg)](https://flask.palletsprojects.com/)
+  [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+</div>
 
-## Overview
+## 📝 Overview
 
-Contact Extractor is a Flask-based API service that scrapes websites to extract:
+Contact Extractor is a powerful API service that automatically extracts contact information from websites, including:
 - Email addresses
 - Phone numbers
-- Social media links (Instagram, LinkedIn, X/Twitter, and other platforms)
+- Social media links (Instagram, LinkedIn, X/Twitter, Facebook, and more)
+- Other contact-related data
 
-It uses Selenium with headless Chrome for robust scraping, BeautifulSoup for HTML parsing, and multithreading for efficient parallel processing of multiple domains.
+The service provides multiple endpoints for different use cases, from single domain processing to batch processing via CSV or Google Sheets integration.
 
-## Features
+## ✨ Features
 
-- **Bulk Domain Processing**: Process multiple domains in parallel
-- **Smart Extraction**: Uses both link analysis and regex pattern matching
-- **Social Media Detection**: Identifies and categorizes links to 20+ social platforms
-- **CSV Export**: Automatically exports results to downloadable CSV files
-- **API Authentication**: Secure endpoints with API key authentication
-- **Integration-Ready**: Designed to work with external data sources via a worker URL
+- 🔍 **Intelligent Contact Detection**
+  - Advanced email pattern recognition
+  - Smart phone number validation
+  - Social media link categorization
+  - Footer-specific content analysis
 
-## Requirements
+- 🚀 **Multiple Processing Methods**
+  - Single domain processing
+  - Array of domains processing
+  - CSV file processing
+  - Google Sheets integration
 
-- Python 3.6+
-- Chrome/Chromium browser
-- ChromeDriver compatible with your Chrome version
+- 🔒 **Security**
+  - API key authentication
+  - Secure request handling
+  - Input validation
 
-## Installation
+- 📊 **Output Options**
+  - JSON response with extracted data
+  - CSV file generation
+  - Structured data format
+
+## 🛠️ Installation
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
-cd Contact_Extractor
+git clone https://github.com/yourusername/contact-extractor.git
+cd contact-extractor
 ```
 
-2. Install required packages:
+2. Create and activate a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+3. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Create a `.env` file in the project root with your API secret:
+4. Create a `.env` file with your configuration:
+```env
+MY_API_SECRET=your_api_key_here
+GOOGLE_SHEET_WORKER_URL=your_google_sheet_worker_url
 ```
-MY_API_SECRET=your_secret_key_here
-```
 
-4. Ensure ChromeDriver is installed and matches your Chrome version.
+## 🚀 Usage
 
-## Running the Application
+### Starting the Server
 
-Start the Flask server:
 ```bash
 python Contact_extractor.py
 ```
 
-By default, the server runs on `http://localhost:5000` in debug mode.
+The server will start on `http://localhost:5000`
 
-## API Endpoints
+### API Endpoints
 
-### 1. Process Multiple Domains
+#### 1. Single Domain Request
+Process a single domain for contact information.
 
-**Endpoint**: `/process-domains`  
-**Method**: POST  
-**Authentication**: API key required in headers
+**Request:**
+```http
+POST /single-request
+Content-Type: application/json
+api-key: your_api_key
 
-**Request Headers**:
-```
-api-key: your_secret_key_here
-```
-
-**Request Body**:
-```json
 {
-  "worker_url": "https://your-worker-service.com/endpoint",
-  "target_url": "https://docs.google.com/spreadsheets/d/...",
-  "max_workers": 5
+    "url": "example.com"
 }
 ```
 
-- `worker_url`: URL of a service that returns domains to process
-- `target_url`: URL that the worker service will use to fetch domains (e.g., a Google Sheet)
-- `max_workers`: Number of parallel processes (default: 5)
-
-**Response**:
+**Response:**
 ```json
 {
-  "success": true,
-  "message": "Processed 50 domains",
-  "csv_filename": "domain_contacts_1234567890.csv",
-  "results": [
-    {
-      "domain": "example.com",
-      "emails": ["contact@example.com", "support@example.com"],
-      "phones": ["+1-555-123-4567"],
-      "instagram": "https://instagram.com/example",
-      "linkedin": "https://linkedin.com/company/example",
-      "x": "https://x.com/example",
-      "other": ["https://facebook.com/example"]
-    },
-    ...
-  ]
+    "success": true,
+    "message": "Processed 1 domain. CSV generated.",
+    "csv_filename": "single_domain_1234567890.csv",
+    "results": [...]
 }
 ```
 
-### 2. Download CSV Results
+![Single Request Example](screenshots/Contact_extractor_single_Request.png)
 
-**Endpoint**: `/download-csv/<filename>`  
-**Method**: GET  
-**Authentication**: API key required in headers
+#### 2. Array Request
+Process multiple domains in parallel.
 
-**Request Headers**:
+**Request:**
+```http
+POST /array-request
+Content-Type: application/json
+api-key: your_api_key
+
+{
+    "domains": ["example1.com", "example2.com"],
+    "max_workers": 5
+}
 ```
-api-key: your_secret_key_here
+
+![Array Request Example](screenshots/Contact_extractor_Array.png)
+
+#### 3. CSV Request
+Process domains from a CSV file.
+
+**Request:**
+```http
+POST /csv-request
+Content-Type: application/json
+api-key: your_api_key
+
+{
+    "csv_url": "https://example.com/domains.csv",
+    "domain_column_header": "Domain",
+    "max_workers": 5
+}
 ```
 
-Returns a CSV file with the following columns:
+![CSV Request Example](screenshots/Contact_extractor_CSV_request.png)
+
+#### 4. Sheet Request
+Process domains from a Google Sheet.
+
+**Request:**
+```http
+POST /sheet-request
+Content-Type: application/json
+api-key: your_api_key
+
+{
+    "target_url": "your_google_sheet_url",
+    "max_workers": 5
+}
+```
+
+![Sheet Request Example](screenshots/Contact_extractor_Sheet.png)
+
+#### 5. Download CSV
+Download generated CSV files.
+
+```http
+GET /download-csv/{filename}
+api-key: your_api_key
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+- `MY_API_SECRET`: Your API key for authentication
+- `GOOGLE_SHEET_WORKER_URL`: URL for Google Sheets integration
+
+### Chrome Options
+
+The service uses headless Chrome for web scraping with the following configurations:
+- Headless mode
+- No sandbox
+- Disabled GPU
+- Custom user agent
+
+## 📊 Output Format
+
+The CSV output includes the following columns:
 - Domain
 - Emails
 - Phone Numbers
 - Instagram
 - LinkedIn
-- X
+- X (Twitter)
+- Facebook
 - Other Socials
 
-### 3. Extract Info from a Single Domain
+## 🔒 Security Considerations
 
-**Endpoint**: `/extract-info`  
-**Method**: POST  
-**Authentication**: API key required in headers
+1. Always use HTTPS in production
+2. Keep your API key secure
+3. Validate all input data
+4. Monitor request rates
+5. Implement rate limiting if needed
 
-**Request Headers**:
-```
-api-key: your_secret_key_here
-```
+## 🤝 Contributing
 
-**Request Body**:
-```json
-{
-  "url": "https://example.com"
-}
-```
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-**Response**:
-```json
-{
-  "emails": ["contact@example.com"],
-  "phone_numbers": ["+1-555-123-4567"],
-  "social_links": ["https://instagram.com/example", "https://linkedin.com/company/example"]
-}
-```
+## 📄 License
 
-## Worker Service Integration
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-The application is designed to work with an external "worker" service that provides the list of domains to process. This worker must:
+## 🙏 Acknowledgments
 
-1. Accept a POST request with a JSON body containing a `url` parameter (typically a Google Sheet URL)
-2. Return a JSON response with:
-   ```json
-   {
-     "success": true,
-     "domains": ["example.com", "example.org", "example.net"]
-   }
-   ```
+- Flask framework
+- Selenium WebDriver
+- BeautifulSoup4
+- Python-dotenv
 
-## Supported Social Media Platforms
+---
 
-The application can identify links to the following platforms:
-- X/Twitter
-- Facebook
-- Instagram
-- LinkedIn
-- YouTube
-- Pinterest
-- TikTok
-- Snapchat
-- Reddit
-- Tumblr
-- WhatsApp
-- Telegram
-- Discord
-- Medium
-- GitHub
-- Threads
-- Mastodon
-- And more
-
-## Technical Implementation
-
-### Extraction Process
-1. **Initialization**: Configures a headless Chrome instance with Selenium
-2. **Page Loading**: Visits the target domain with timeouts and error handling
-3. **Content Extraction**:
-   - Parses links for social media, email, and phone information
-   - Applies regex patterns to find contact details in page text
-   - Categorizes social media links by platform
-4. **Result Organization**: Structures data for API response and CSV export
-
-### Multithreading
-Uses Python's `ThreadPoolExecutor` for parallel processing of multiple domains, with configurable worker count to manage system resources.
-
-### Error Handling
-Implements robust error handling to ensure the process continues even if individual domain scraping fails.
-
-## Security Considerations
-
-- All API endpoints are protected with API key authentication
-- The API key is loaded from environment variables, not hardcoded
-- The application runs in a sandboxed Chrome environment with appropriate security flags
-
-## CSV Format
-
-The generated CSV file contains the following columns:
-- **Domain**: The website domain (without protocol)
-- **Emails**: Semicolon-separated list of email addresses
-- **Phone Numbers**: Semicolon-separated list of phone numbers
-- **Instagram**: Instagram profile URL (if found)
-- **LinkedIn**: LinkedIn profile URL (if found)
-- **X**: X/Twitter profile URL (if found)
-- **Other Socials**: Semicolon-separated list of other social media links
-
-## Limitations
-
-- JavaScript-heavy websites may not fully render in headless mode
-- Some websites actively block scraping attempts
-- Rate limiting may occur if processing too many domains from the same IP
-- Regex patterns may not catch all variations of contact information
-
-## License
-
-[Specify your license information here]
-
-## Contributing
-
-[Specify contribution guidelines here] 
+<div align="center">
+  Made with ❤️ by [Your Name]
+</div> 

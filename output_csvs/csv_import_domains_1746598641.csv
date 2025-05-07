@@ -1,0 +1,99 @@
+Domain,Emails,Phone Numbers,Instagram,LinkedIn,X,Facebook,Other Socials
+<!DOCTYPE html>,,,,,,,Error processing domain
+"<html lang=""en"">",,,,,,,Error processing domain
+<head>,,,,,,,Error processing domain
+"<meta charset=""UTF-8"">",,,,,,,Error processing domain
+"<meta name=""viewport"" content=""width=device-width",,,,,,,Error processing domain
+<title>Gofile - Cloud Storage Made Simple<,,,,,,,Error processing domain
+"<meta name=""description"" content=""Secure",,,,,,,Error processing domain
+"<meta name=""keywords"" content=""cloud storage",,,,,,,Error processing domain
+"<meta name=""author"" content=""Gofile Team"">",,,,,,,Error processing domain
+"<meta property=""og:type"" content=""website"">",,,,,,,Error processing domain
+"<meta property=""og:url"" content=""https:",,,,,,,Error processing domain
+"<meta property=""og:title"" content=""Gofile - Cloud Storage Made Simple"">",,,,,,,Error processing domain
+"<meta property=""og:description"" content=""Secure",,,,,,,Error processing domain
+"<meta property=""og:image"" content=""https:",,,,,,,Error processing domain
+"<link rel=""canonical"" href=""https:",,,,,,,Error processing domain
+"<link rel=""icon"" type=""image",,,,,,,Error processing domain
+"<link rel=""icon"" type=""image",,,,,,,Error processing domain
+"<link rel=""icon"" type=""image",,,,,,,Error processing domain
+"<link rel=""stylesheet"" href=""",,,,,,,Error processing domain
+"<link rel=""stylesheet"" href=""",,,,,,,Error processing domain
+"<!-- <script src=""https:",,,,,,,Error processing domain
+"<script src=""",,,,,,,Error processing domain
+"<script src=""",,,,,,,Error processing domain
+"<script src=""",,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+"<body id=""index_appBody"" class=""font-sans antialiased bg-gray-900 text-white"">",,,,,,,Error processing domain
+"<div id=""index_notification"" class=""fixed top-4 right-4 w-80 max-w-full z-50 space-y-2""><",,,,,,,Error processing domain
+"<div id=""index_app"" class=""min-h-screen flex gap-4 p-1 lg:p-4"">",,,,,,,Error processing domain
+"<div id=""index_sidebarOverlay"" class=""fixed inset-0 bg-gray-900 bg-opacity-50 z-5 hidden lg:hidden""><",,,,,,,Error processing domain
+"<div id=""index_sidebar"" class=""min-w-64 max-w-72 bg-gray-800 text-white p-4 transform transition-transform lg:translate-x-0 -translate-x-full fixed lg:relative top-0 left-0 h-[calc(100vh-0.5rem)] lg:h-auto shadow-lg overflow-y-auto z-10 rounded-lg mt-1 mb-1 lg:mt-0 lg:mb-0"">",,,,,,,Critical error processing domain
+"<div id=""index_sidebarHeader"" class=""flex justify-between items-center mb-6"">",,,,,,,Error processing domain
+"<a href=""",,,,,,,Error processing domain
+"<img id=""index_logo"" src=""",,,,,,,Error processing domain
+"<h2 id=""index_brandName"" class=""text-2xl font-bold"">Gofile<",,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+"<button id=""index_closeSidebar"" aria-label=""Close Sidebar"" class=""lg:hidden bg-blue-600 hover:bg-blue-700 text-white p-1 rounded text-xs"">",,,,,,,Error processing domain
+"<i class=""fas fa-chevron-left""><",,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+"<div id=""index_accounts"" class=""flex flex-col items-start mb-6"">",,,,,,,Error processing domain
+"<div id=""index_accountList"" class=""space-y-2 w-full"">",,,,,,,Error processing domain
+"<div id=""index_loader"" class=""w-full h-full flex items-center justify-center"">",,,,,,,Error processing domain
+"<div class=""animate-spin rounded-full h-8 w-8 border-t-4 border-blue-500""><",,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+"<button role=""button"" aria-label=""Add Account"" class=""index_addAccount mt-4 flex items-center justify-center gap-2 p-2 text-white bg-blue-600 hover:bg-blue-700 rounded w-full"">",,,,,,,Error processing domain
+"<i class=""fas fa-plus-circle""><",,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+"<ul id=""index_mainNav"" class=""space-y-4"">",,,,,,,Error processing domain
+"<li class=""border-b border-gray-700""><",,,,,,,Error processing domain
+"<li><a href=""",,,,,,,Error processing domain
+"<li><a href=""",,,,,,,Error processing domain
+"<li><a href=""",,,,,,,Error processing domain
+"<li><a href=""",,,,,,,Error processing domain
+"<li><a href=""",,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+"<div id=""index_footerSocial"" class=""mt-4 border-t border-gray-700 pt-4"">",,,,,,,Error processing domain
+<ul>,,,,,,,Error processing domain
+"<li><a href=""https:",,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+"<div id=""index_content"" class=""flex-1 bg-gray-800 rounded-lg shadow-lg flex flex-col overflow-auto"">",,,,,,,Error processing domain
+"<header id=""index_header"" class=""bg-gray-800 p-2 flex items-center justify-between rounded-t-lg border-b border-gray-700"">",,,,,,,Error processing domain
+"<button id=""index_toggleSidebar"" aria-label=""Toggle Sidebar"" class=""px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded"">",,,,,,,Error processing domain
+"<i class=""fas fa-bars""><",,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+"<input type=""file"" multiple="""" class=""uploadInput hidden"">",,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+"<div id=""index_upload"" class=""p-2 border-b border-gray-700 space-y-2 max-w-full md:max-w-5xl md:mx-auto hidden"">",,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+"<div id=""index_ads"" class=""flex flex-col justify-center items-center p-4 border-b border-gray-700 hidden""><",,,,,,,Error processing domain
+"<main id=""index_main"" class=""flex-1 p-3 lg:p-6"">",,,,,,,Error processing domain
+"<div id=""index_loader"" class=""w-full h-full flex items-center justify-center"">",,,,,,,Error processing domain
+"<div class=""animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500""><",,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+"<footer id=""index_footer"" class=""bg-gray-800 p-2 text-center text-sm text-gray-400 border-t border-gray-700 rounded-b-lg flex flex-col lg:flex-row justify-between items-center space-y-2 lg:space-y-0 lg:space-x-2"">",,,,,,,Error processing domain
+"<div class=""flex flex-col items-center space-y-2 lg:flex-row lg:space-y-0 lg:space-x-2"">",,,,,,,Error processing domain
+"<a href=""",,,,,,,Error processing domain
+"<span class=""hidden lg:inline"">|<",,,,,,,Error processing domain
+"<a href=""",,,,,,,Error processing domain
+"<span class=""hidden lg:inline"">|<",,,,,,,Error processing domain
+"<a href=""",,,,,,,Error processing domain
+"<span class=""hidden lg:inline"">|<",,,,,,,Error processing domain
+"<a href=""",,,,,,,Error processing domain
+"<span class=""hidden lg:inline"">|<",,,,,,,Error processing domain
+"<a href=""",,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+"<div class=""text-center lg:text-right"">",,,,,,,Error processing domain
+<p>WOJTEK SAS © <script>document.write(new Date().getFullYear());<,,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+<,,,,,,,Error processing domain
+<,,,,,,,Error processing domain
