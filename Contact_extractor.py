@@ -205,7 +205,7 @@ def is_plausible_phone_candidate(candidate_str_orig, min_digits=MIN_PHONE_DIGITS
 def normalize_url(url):
     """Normalize URL to get the landing page URL."""
     if not url:
-        return None
+        return None, None
         
     # Add scheme if missing
     if not url.startswith(('http://', 'https://')):
@@ -227,7 +227,7 @@ def normalize_url(url):
         return base_url, display_url
     except Exception as e:
         print(f"Error normalizing URL {url}: {e}")
-        return None
+        return None, None
 
 def extract_logo_url(soup, base_url):
     """Extract the logo URL from the webpage with improved validation."""
@@ -326,11 +326,10 @@ def scrape_domain(domain_input):
     original_domain_input = domain_input
     driver = None
     try:
-        processed_url = normalize_url(domain_input)
+        processed_url, display_domain = normalize_url(domain_input)
         if not processed_url:
             return {"error": "Invalid or unreachable URL"}, 400
 
-        display_domain = processed_url
         print(f"\n--- Processing Domain: {display_domain} (from {original_domain_input}) ---")
         
         social_links = {}
@@ -479,7 +478,7 @@ def scrape_domain(domain_input):
             soup = None
             
             result = {
-                'domain': display_domain,
+                'domain': processed_url,
                 'logoURL': logo_url,
                 'socialLinks': social_links,
                 'emails': sorted(list(emails_found)),
