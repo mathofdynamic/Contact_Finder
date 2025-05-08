@@ -381,7 +381,7 @@ def scrape_domain(domain_input):
                 # EMAILS from mailto:
                 if href.startswith('mailto:'):
                     try:
-                        email_part = unquote(href.split('mailto:', 1)[1].split('?')[0])
+                        email_part = unquote(href.split('mailto:', 1)[1].split('?')[0]).strip()
                         if re.fullmatch(EMAIL_REGEX, email_part):
                             emails_found.add(email_part)
                     except Exception: pass
@@ -403,14 +403,16 @@ def scrape_domain(domain_input):
                     parsed_original_url = urlparse(processed_url) # Use the selenium-loaded URL context
                     if not abs_href.startswith(('http://', 'https://')):
                         if abs_href.startswith('//'):
-                             abs_href = (parsed_original_url.scheme or 'https') + ':' + abs_href
+                            abs_href = (parsed_original_url.scheme or 'https') + ':' + abs_href
                         elif abs_href.startswith('/'):
                             base_url = f"{(parsed_original_url.scheme or 'https')}://{parsed_original_url.netloc}"
                             abs_href = f"{base_url}{abs_href}"
-                        else: 
-                            # If it's not absolute, and not starting with // or /, it might be a malformed or relative link
-                            # that's not easily resolvable to a social media URL. Skip for social check.
-                            if social_type == "other": continue # Only skip if we haven't already ID'd it from tel:
+                        else:
+                            abs_href = (parsed_original_url.scheme or 'https') + '://' + abs_href
+                        # else: 
+                        #     # If it's not absolute, and not starting with // or /, it might be a malformed or relative link
+                        #     # that's not easily resolvable to a social media URL. Skip for social check.
+                        #     if social_type == "other": continue # Only skip if we haven't already ID'd it from tel:
                     
                     social_type, social_url = categorize_social_link(abs_href)
                     if social_type and social_type not in social_links : # Store first one found per type
