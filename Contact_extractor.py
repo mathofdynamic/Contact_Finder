@@ -465,7 +465,7 @@ def scrape_domain(domain_input):
                 print(f"Error extracting logo URL for {display_domain}: {e}")
                 logo_url = None
             
-            if social_links['unknown']: social_links['unknown'] = list(social_links['unknown'])
+            if 'unknown' in social_links: social_links['unknown'] = list(social_links['unknown'])
             
             result = {
                 'domain': display_domain,
