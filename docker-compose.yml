@@ -1,0 +1,13 @@
+services:
+  website_contact_extractor:
+    build: .
+    image: website_contact_extractor
+    container_name: website_contact_extractor
+    restart: unless-stopped
+    network_mode: host
+    ports: # ignored for host network
+      - "5000:5000"
+    env_file: # load your environment variables
+      - .env
+    # environment:
+    #   - DEBUG=False
