@@ -356,7 +356,7 @@ def scrape_domain(domain_input):
             driver.get(processed_url)
             
             try:
-                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+                WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.TAG_NAME, "a")))
             except TimeoutException:
                 print(f"Body not found quickly for {display_domain}, proceeding.")
             
@@ -372,8 +372,6 @@ def scrape_domain(domain_input):
             
             # --- Email and Social Link Extraction (from whole page) ---
             all_links = soup.find_all('a', href=True)
-            if processed_url.find('droplinked') != -1:
-                print("All links in droplinked:", all_links)
             for link in all_links:
                 href = link.get('href')
                 if not href or not isinstance(href, str): continue
