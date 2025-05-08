@@ -549,7 +549,7 @@ def _process_domain_list_and_generate_csv(domains_list, max_workers, csv_file_pr
         for i, future in enumerate(future_to_domain):
             domain_name = future_to_domain[future]
             try:
-                result = future.result()
+                result, _ = future.result()
                 results.append(result)
             except Exception as e:
                 print(f"Exception processing domain {domain_name} in thread: {e}")
