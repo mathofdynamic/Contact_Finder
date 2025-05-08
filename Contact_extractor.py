@@ -792,6 +792,11 @@ def download_csv(filename):
         return jsonify({"error": f"Error downloading CSV file: {str(e)}"}), 500
 
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Simple health check endpoint."""
+    return jsonify({"status": "active"}), 200
+
 # --- Run the Flask App ---
 if __name__ == '__main__':
     if not os.path.exists(CSV_OUTPUT_FOLDER):
