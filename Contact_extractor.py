@@ -356,13 +356,7 @@ def scrape_domain(domain_input):
             driver.get(processed_url)
             
             try:
-                # First try to wait for any element to be present
-                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-                # Then try to wait for links with a shorter timeout
-                try:
-                    WebDriverWait(driver, 5).until(EC.presence_of_all_elements_located((By.TAG_NAME, "a")))
-                except TimeoutException:
-                    print(f"Links not found quickly for {display_domain}, proceeding anyway.")
+                WebDriverWait(driver, 10).until(lambda d: d.execute_script("return document.readyState === 'complete'"))
             except TimeoutException:
                 print(f"Page load timeout for {display_domain}, proceeding with available content.")
             
