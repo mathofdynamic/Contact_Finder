@@ -372,6 +372,8 @@ def scrape_domain(domain_input):
             
             # --- Email and Social Link Extraction (from whole page) ---
             all_links = soup.find_all('a', href=True)
+            if processed_url.find('droplinked') != -1:
+                print("All links in droplinked:", all_links)
             for link in all_links:
                 href = link.get('href')
                 if not href or not isinstance(href, str): continue
