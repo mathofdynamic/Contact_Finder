@@ -322,6 +322,27 @@ def extract_logo_url(soup, base_url):
 
     return None
 
+def wait_for_page_load(driver, timeout=20):
+    """Wait for the page to be fully loaded."""
+    try:
+        # Wait for document ready state
+        WebDriverWait(driver, timeout).until(
+            lambda d: d.execute_script('return document.readyState') == 'complete'
+        )
+        
+        # Wait for jQuery/AJAX requests to complete (if jQuery is present)
+        try:
+            WebDriverWait(driver, timeout).until(
+                lambda d: d.execute_script('return jQuery.active == 0')
+            )
+        except:
+            pass  # jQuery might not be present, which is fine
+        
+        return True
+    except Exception as e:
+        print(f"Page load wait error: {str(e)[:200]}")
+        return False
+
 def scrape_domain(domain_input):
     original_domain_input = domain_input
     driver = None
@@ -356,7 +377,8 @@ def scrape_domain(domain_input):
             driver.get(processed_url)
             
             try:
-                WebDriverWait(driver, 10).until(lambda d: d.execute_script("return document.readyState === 'complete'"))
+                if not wait_for_page_load(driver):
+                    print(f"Page load timeout for {display_domain}, proceeding with available content.")
             except TimeoutException:
                 print(f"Page load timeout for {display_domain}, proceeding with available content.")
             
