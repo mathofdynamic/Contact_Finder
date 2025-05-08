@@ -322,24 +322,6 @@ def extract_logo_url(soup, base_url):
 
     return None
 
-def wait_for_page_load(driver, timeout=20):
-    """Wait for the page to be fully loaded."""
-    try:
-        # Wait for document ready state
-        WebDriverWait(driver, timeout).until(
-            lambda d: d.execute_script('return document.readyState') == 'complete'
-        )
-
-        # Wait for all links to be present
-        WebDriverWait(driver, timeout).until(
-            EC.presence_of_all_elements_located((By.TAG_NAME, "a"))
-        )
-        
-        return True
-    except Exception as e:
-        print(f"Page load wait error: {str(e)[:200]}")
-        return False
-
 def scrape_domain(domain_input):
     original_domain_input = domain_input
     driver = None
@@ -365,8 +347,8 @@ def scrape_domain(domain_input):
                 driver = webdriver.Chrome(options=chrome_options)
             
             # Set memory-related options
-            driver.set_page_load_timeout(60)
-            driver.set_script_timeout(60)
+            driver.set_page_load_timeout(30)
+            driver.set_script_timeout(30)
             
             # Clear browser cookies before loading
             driver.delete_all_cookies()
@@ -374,10 +356,9 @@ def scrape_domain(domain_input):
             driver.get(processed_url)
             
             try:
-                if not wait_for_page_load(driver):
-                    print(f"Page load timeout for {display_domain}, proceeding with available content.")
+                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
             except TimeoutException:
-                print(f"Page load timeout for {display_domain}, proceeding with available content.")
+                print(f"Body not found quickly for {display_domain}, proceeding.")
             
             page_source = driver.page_source
             if not page_source:
