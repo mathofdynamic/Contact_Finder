@@ -322,7 +322,7 @@ def extract_logo_url(soup, base_url):
 
     return None
 
-def scrape_domain(domain_input):
+def scrape_domain(domain_input, timeout=30):
     original_domain_input = domain_input
     driver = None
     try:
@@ -346,9 +346,9 @@ def scrape_domain(domain_input):
             else:
                 driver = webdriver.Chrome(options=chrome_options)
             
-            # Set memory-related options
-            driver.set_page_load_timeout(30)
-            driver.set_script_timeout(30)
+            # Set memory-related options with provided timeout
+            driver.set_page_load_timeout(timeout)
+            driver.set_script_timeout(timeout)
             
             # Clear browser cookies before loading
             driver.delete_all_cookies()
@@ -356,7 +356,7 @@ def scrape_domain(domain_input):
             driver.get(processed_url)
             
             try:
-                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+                WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
             except TimeoutException:
                 print(f"Body not found quickly for {display_domain}, proceeding.")
             
@@ -555,8 +555,14 @@ def _process_domain_list_and_generate_csv(domains_list, max_workers, csv_file_pr
     if not valid_domains:
         return [], None, "No valid domains provided for processing."
 
+    # Calculate dynamic timeout based on workers
+    # Base timeout of 30 seconds, add 2 seconds per worker
+    base_timeout = 30
+    worker_factor = max_workers * 6  # Add 2s per worker
+    dynamic_timeout = base_timeout + worker_factor
+
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_domain = {executor.submit(scrape_domain, domain): domain for domain in valid_domains}
+        future_to_domain = {executor.submit(scrape_domain, domain, dynamic_timeout): domain for domain in valid_domains}
         for _, future in enumerate(future_to_domain):
             domain_name = future_to_domain[future]
             try:
