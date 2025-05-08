@@ -227,7 +227,7 @@ def normalize_url(url):
         return base_url, display_url
     except Exception as e:
         print(f"Error normalizing URL {url}: {e}")
-        return None, None
+        return None
 
 def extract_logo_url(soup, base_url):
     """Extract the logo URL from the webpage with improved validation."""
@@ -324,19 +324,20 @@ def extract_logo_url(soup, base_url):
 
 def scrape_domain(domain_input):
     original_domain_input = domain_input
+    driver = None
     try:
-        processed_url, display_domain = normalize_url(domain_input)
+        processed_url = normalize_url(domain_input)
         if not processed_url:
             return {"error": "Invalid or unreachable URL"}, 400
 
-        print(f"\n--- Processing Domain: {display_domain} (from {processed_url}) ---")
+        display_domain = processed_url
+        print(f"\n--- Processing Domain: {display_domain} (from {original_domain_input}) ---")
         
-        driver = None
         social_links = {}
         emails_found = set()
         phones_found = set()
         
-        default_result_on_error = {"error": f"Error processing domain: {display_domain} (from {processed_url})"}, 500
+        default_result_on_error = {"error": f"Error processing domain: {display_domain} (from {original_domain_input})"}, 500
         
         try:
             driver_path = os.environ.get("DRIVER_PATH")
@@ -345,7 +346,14 @@ def scrape_domain(domain_input):
                 driver = webdriver.Chrome(service=service, options=chrome_options)
             else:
                 driver = webdriver.Chrome(options=chrome_options)
+            
+            # Set memory-related options
             driver.set_page_load_timeout(30)
+            driver.set_script_timeout(30)
+            
+            # Clear browser cookies before loading
+            driver.delete_all_cookies()
+            
             driver.get(processed_url)
             
             try:
@@ -359,6 +367,9 @@ def scrape_domain(domain_input):
                 return default_result_on_error
             
             soup = BeautifulSoup(page_source, 'html.parser')
+            
+            # Clear page source to free memory
+            page_source = None
             
             # --- Email and Social Link Extraction (from whole page) ---
             all_links = soup.find_all('a', href=True)
@@ -405,14 +416,13 @@ def scrape_domain(domain_input):
                     social_type, social_url = categorize_social_link(abs_href)
                     if social_type and social_type not in social_links : # Store first one found per type
                         social_links[social_type] = social_url
-                    elif not social_type:
-                        social_type = "unknown"
-                        if social_type not in social_links: social_links[social_type] = set()
-                        social_links[social_type].add(social_url)
                 except Exception:
                     pass # Ignore errors in social link categorization
             
-            # Emails from page text (whole body)
+            # Clear links list to free memory
+            all_links = None
+            
+            # Emails from page text
             if soup.body:
                 try:
                     body_text_for_emails = soup.body.get_text(separator=' ', strip=True)
@@ -438,6 +448,8 @@ def scrape_domain(domain_input):
                 #     footer_text_content = soup.body.get_text(separator=' ', strip=True)
                 #     print(f"Warning: Searching entire body for phones on {display_domain} as no footer found.")
 
+            # Clear footer elements to free memory
+            footer_elements = None
 
             if footer_text_content: # Only search for phones in text if footer content was found
                 try:
@@ -453,10 +465,8 @@ def scrape_domain(domain_input):
                 except Exception as e:
                     print(f"Error regex-finding/filtering phones in footer for {display_domain}: {e}")
             
-            # other_socials = []
-            # for social_type, url_val in social_links.items():
-            #     if social_type not in ['instagram', 'linkedin', 'x', 'facebook']:
-            #         other_socials.append(url_val)
+            # Clear footer text to free memory
+            footer_text_content = None
             
             # Extract logo URL
             try:
@@ -465,19 +475,15 @@ def scrape_domain(domain_input):
                 print(f"Error extracting logo URL for {display_domain}: {e}")
                 logo_url = None
             
-            if 'unknown' in social_links: social_links['unknown'] = list(social_links['unknown'])
+            # Clear soup to free memory
+            soup = None
             
             result = {
                 'domain': display_domain,
                 'logoURL': logo_url,
                 'socialLinks': social_links,
                 'emails': sorted(list(emails_found)),
-                'phones': sorted(list(set(phones_found))), 
-                # 'instagram': social_links.get('instagram', ''),
-                # 'linkedin': social_links.get('linkedin', ''),
-                # 'x': social_links.get('x', ''),
-                # 'facebook': social_links.get('facebook', ''),
-                # 'other': sorted(list(set(other_socials)))
+                'phones': sorted(list(set(phones_found)))
             }
             
             print(f"Extraction complete for {display_domain}: {len(emails_found)} emails, {len(phones_found)} plausible phones, {len(social_links)} distinct social categories.")
@@ -492,7 +498,11 @@ def scrape_domain(domain_input):
             traceback.print_exc()
         finally:
             if driver:
-                driver.quit()
+                try:
+                    driver.quit()
+                except Exception as e:
+                    print(f"Error closing WebDriver for {display_domain}: {e}")
+                driver = None
         
         return default_result_on_error
 
@@ -546,7 +556,7 @@ def _process_domain_list_and_generate_csv(domains_list, max_workers, csv_file_pr
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_to_domain = {executor.submit(scrape_domain, domain): domain for domain in valid_domains}
-        for i, future in enumerate(future_to_domain):
+        for future in future_to_domain:
             domain_name = future_to_domain[future]
             try:
                 result, _ = future.result()
