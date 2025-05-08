@@ -556,7 +556,7 @@ def _process_domain_list_and_generate_csv(domains_list, max_workers, csv_file_pr
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_to_domain = {executor.submit(scrape_domain, domain): domain for domain in valid_domains}
-        for future in future_to_domain:
+        for _, future in enumerate(future_to_domain):
             domain_name = future_to_domain[future]
             try:
                 result, _ = future.result()
