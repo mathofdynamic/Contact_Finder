@@ -329,17 +329,11 @@ def wait_for_page_load(driver, timeout=20):
         WebDriverWait(driver, timeout).until(
             lambda d: d.execute_script('return document.readyState') == 'complete'
         )
-        
-        # Wait for jQuery/AJAX requests to complete (if jQuery is present)
-        try:
-            WebDriverWait(driver, timeout).until(
-                lambda d: d.execute_script('return jQuery.active == 0')
-            )
-        except:
-            pass  # jQuery might not be present, which is fine
-        
-        # Additional wait for dynamic content
-        time.sleep(1)  # Small delay to allow for any final animations/transitions
+
+        # Wait for all links to be present
+        WebDriverWait(driver, timeout).until(
+            EC.presence_of_all_elements_located((By.TAG_NAME, "a"))
+        )
         
         return True
     except Exception as e:
@@ -371,8 +365,8 @@ def scrape_domain(domain_input):
                 driver = webdriver.Chrome(options=chrome_options)
             
             # Set memory-related options
-            driver.set_page_load_timeout(30)
-            driver.set_script_timeout(30)
+            driver.set_page_load_timeout(60)
+            driver.set_script_timeout(60)
             
             # Clear browser cookies before loading
             driver.delete_all_cookies()
