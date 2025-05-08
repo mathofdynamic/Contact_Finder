@@ -328,7 +328,7 @@ def scrape_domain(domain_input, timeout=30):
     try:
         processed_url, display_domain = normalize_url(domain_input)
         if not processed_url:
-            return {"error": "Invalid or unreachable URL"}, 400
+            return {"domain": processed_url, "error": "Invalid or unreachable URL"}, 400
 
         print(f"\n--- Processing Domain: {display_domain} (from {original_domain_input}) ---")
         
@@ -336,7 +336,7 @@ def scrape_domain(domain_input, timeout=30):
         emails_found = set()
         phones_found = set()
         
-        default_result_on_error = {"error": f"Error processing domain: {display_domain} (from {original_domain_input})"}, 500
+        default_result_on_error = {"domain": processed_url, "error": f"Error processing domain: {display_domain} (from {original_domain_input})"}, 500
         
         try:
             driver_path = os.environ.get("DRIVER_PATH")
