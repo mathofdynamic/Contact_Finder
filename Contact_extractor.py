@@ -338,6 +338,9 @@ def wait_for_page_load(driver, timeout=20):
         except:
             pass  # jQuery might not be present, which is fine
         
+        # Additional wait for dynamic content
+        time.sleep(1)  # Small delay to allow for any final animations/transitions
+        
         return True
     except Exception as e:
         print(f"Page load wait error: {str(e)[:200]}")
