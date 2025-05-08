@@ -212,8 +212,12 @@ def normalize_url(url):
         url = 'https://' + url
         
     try:
+        # Parse the URL to get the base domain
+        parsed = urlparse(url)
+        base_url = f"{parsed.scheme}://{parsed.netloc}"
+
         # Make a HEAD request to check for redirects
-        response = requests.head(url, allow_redirects=True, timeout=10)
+        response = requests.head(base_url, allow_redirects=True, timeout=10)
         final_url = response.url
         
         # Parse the URL to get the base domain
@@ -328,7 +332,7 @@ def scrape_domain(domain_input, timeout=30):
     try:
         processed_url, display_domain = normalize_url(domain_input)
         if not processed_url:
-            return {"domain": processed_url, "error": "Invalid or unreachable URL"}, 400
+            return {"domain": original_domain_input, "error": "Invalid or unreachable URL"}, 400
 
         print(f"\n--- Processing Domain: {display_domain} (from {original_domain_input}) ---")
         
