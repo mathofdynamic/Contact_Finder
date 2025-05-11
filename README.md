@@ -38,16 +38,14 @@ The service provides multiple endpoints for different use cases, from single dom
   "results": [
     {
       "domain": "droplinked.com",
+      "logoURL": "https://droplinked.com/apple-touch-icon.png",
       "emails": ["support@droplinked.com"],
-      "facebook": "",
-      "instagram": "https://www.instagram.com/drop_linked",
-      "linkedin": "https://www.linkedin.com/company/droplinked",
-      "other": [
-        "https://discord.com/channels/...",
-        "https://t.me/droplinked"
-      ],
       "phones": [],
-      "x": "https://twitter.com/droplinked"
+      "socialLinks": {
+        "instagram": "https://www.instagram.com/drop_linked",
+        "linkedin": "https://www.linkedin.com/company/droplinked",
+        "x": "https://twitter.com/droplinked"
+      }
     }
   ],
   "success": true
@@ -68,7 +66,8 @@ The service provides multiple endpoints for different use cases, from single dom
     "https://droplinked.com/",
     "https://flatlay.io/"
   ],
-  "max_workers": 3
+  "max_workers": 3,
+  "generate_csv": false
 }
 ```
 **Response Example:**
@@ -185,6 +184,13 @@ pip install -r requirements.txt
 ```env
 MY_API_SECRET=your_api_key_here
 GOOGLE_SHEET_WORKER_URL=your_google_sheet_worker_url
+
+# 'True' for debugging - Optional - Default: False
+DEBUG=False
+
+# Optional - e.g. '/usr/bin/chromedriver'
+# Set the path if "driver not found" error is encountered.
+DRIVER_PATH=path_to_chromedriver
 ```
 
 ## 🚀 Usage
@@ -196,6 +202,17 @@ python Contact_extractor.py
 ```
 
 The server will start on `http://localhost:5000`
+
+Example production startup with Gunicorn:
+```
+gunicorn -w 4 -b 0.0.0.0:5000 "Contact_extractor:app"
+```
+
+Example production startup using Docker:
+```
+docker compose up -d
+docker compose logs -f # Run to see logs
+```
 
 ### API Endpoints
 

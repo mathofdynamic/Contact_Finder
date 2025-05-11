@@ -97,7 +97,7 @@ def authenticate_request(request_obj):
 def categorize_social_link(url):
     try:
         if not url or not isinstance(url, str):
-            return "other", ""
+            return None, url
         if not url.startswith(('http://', 'https://')):
             if url.startswith('//'):
                 url = 'https:' + url
@@ -106,13 +106,13 @@ def categorize_social_link(url):
         url_obj = urlparse(url)
         hostname = url_obj.netloc.lower().replace('www.', '')
         if not hostname:
-            return "other", url
+            return None, url
         for domain, category in SOCIAL_MEDIA_DOMAINS.items():
             if hostname == domain or hostname.endswith('.' + domain):
                 return category, url
-        return "other", url
+        return None, url
     except Exception:
-        return "other", url
+        return None, url
 
 def is_plausible_phone_candidate(candidate_str_orig, min_digits=MIN_PHONE_DIGITS, max_digits=MAX_PHONE_DIGITS):
     candidate_str = candidate_str_orig.strip()
@@ -202,46 +202,165 @@ def is_plausible_phone_candidate(candidate_str_orig, min_digits=MIN_PHONE_DIGITS
              
     return True
 
-
-def scrape_domain(domain_input):
-    original_domain_input = domain_input
+def normalize_url(url):
+    """Normalize URL to get the landing page URL."""
+    if not url:
+        return None, None
+        
+    # Add scheme if missing
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
+        
     try:
-        domain_input = domain_input.strip() if isinstance(domain_input, str) else ""
-        if not domain_input:
-            return {
-                'domain': "empty_or_invalid_entry", 'emails': [], 'phones': [],
-                'instagram': "", 'linkedin': "", 'x': "", 'facebook': "", 'other': []
-            }
+        # Parse the URL to get the base domain
+        parsed = urlparse(url)
+        base_url = f"{parsed.scheme}://{parsed.netloc}"
 
-        processed_url = domain_input
-        if not processed_url.startswith(('http://', 'https://')):
-            processed_url = f"https://{processed_url}"
+        # Make a HEAD request to check for redirects
+        response = requests.head(base_url, allow_redirects=True, timeout=10)
+        final_url = response.url
         
-        display_domain = urlparse(processed_url).netloc or original_domain_input
-        if not display_domain: 
-             display_domain = original_domain_input
-        if display_domain.startswith("www."):
-            display_domain = display_domain[4:]
+        # Parse the URL to get the base domain
+        parsed = urlparse(final_url)
+        base_url = f"{parsed.scheme}://{parsed.netloc}"
 
-        print(f"\n--- Processing Domain: {display_domain} (from {processed_url}) ---")
+        display_url = parsed.netloc
+        if display_url.startswith("www."):
+            display_url = display_url[4:]
         
-        driver = None
+        return base_url, display_url
+    except Exception as e:
+        print(f"Error normalizing URL {url}: {e}")
+        return None, None
+
+def extract_logo_url(soup, base_url):
+    """Extract the logo URL from the webpage with improved validation."""
+    # Try to get the base domain for relative URLs
+    try:
+        parsed_url = urlparse(base_url)
+        base_domain = f"{parsed_url.scheme}://{parsed_url.netloc}"
+    except:
+        base_domain = base_url
+
+    def normalize_url(url):
+        """Convert relative URLs to absolute URLs."""
+        if not url:
+            return None
+        if not url.startswith(('http://', 'https://')):
+            return base_domain + ('/' if not url.startswith('/') else '') + url
+        return url
+
+    def is_likely_logo(img_element):
+        """Validate if an image element is likely to be a logo."""
+        if not img_element:
+            return False
+            
+        # Check image dimensions (logos are typically square-ish and not too large)
+        width = img_element.get('width')
+        height = img_element.get('height')
+        if width and height:
+            try:
+                w = int(width)
+                h = int(height)
+                # Logos are typically not too large and maintain reasonable aspect ratio
+                if w > 500 or h > 500 or (w > 0 and h > 0 and (w/h > 3 or h/w > 3)):
+                    return False
+            except ValueError:
+                pass
+
+        # Check if image is in header/navbar
+        parent = img_element.parent
+        while parent:
+            parent_class = parent.get('class', [])
+            parent_id = parent.get('id', '')
+            if any(x in str(parent_class).lower() or x in str(parent_id).lower() 
+                  for x in ['header', 'navbar', 'nav', 'brand', 'logo']):
+                return True
+            parent = parent.parent
+
+        return False
+
+    # 1. Check for favicon/shortcut icon (most reliable for brand identity)
+    favicon = soup.find('link', rel=lambda x: x and ('icon' in x.lower() or 'shortcut' in x.lower()))
+    if favicon and favicon.get('href'):
+        return normalize_url(favicon['href'])
+
+    # 2. Check for og:image meta tag (usually the main brand image)
+    og_image = soup.find('meta', property='og:image')
+    if og_image and og_image.get('content'):
+        return normalize_url(og_image['content'])
+
+    # 3. Look for logo in header/navbar first
+    header = soup.find(['header', 'nav'], class_=lambda x: x and any(term in str(x).lower() 
+                                                                     for term in ['header', 'navbar', 'nav']))
+    if header:
+        # Look for images with logo-related attributes
+        logo_img = header.find('img', 
+                             attrs={'alt': lambda x: x and any(term in str(x).lower() 
+                                                             for term in ['logo', 'brand'])})
+        if logo_img and logo_img.get('src'):
+            return normalize_url(logo_img['src'])
+
+    # 4. Look for images with specific logo-related attributes
+    logo_patterns = [
+        'logo', 'brand', 'header-logo', 'site-logo', 'company-logo',
+        'navbar-logo', 'nav-logo', 'header-brand', 'site-brand'
+    ]
+    
+    for pattern in logo_patterns:
+        # Check by ID
+        logo_img = soup.find('img', id=lambda x: x and pattern in str(x).lower())
+        if logo_img and is_likely_logo(logo_img) and logo_img.get('src'):
+            return normalize_url(logo_img['src'])
+            
+        # Check by class
+        logo_img = soup.find('img', class_=lambda x: x and pattern in str(x).lower())
+        if logo_img and is_likely_logo(logo_img) and logo_img.get('src'):
+            return normalize_url(logo_img['src'])
+
+    # 5. As a last resort, look for the first image in the header that might be a logo
+    if header:
+        for img in header.find_all('img'):
+            if is_likely_logo(img) and img.get('src'):
+                return normalize_url(img['src'])
+
+    return None
+
+def scrape_domain(domain_input, timeout=30):
+    original_domain_input = domain_input
+    driver = None
+    try:
+        processed_url, display_domain = normalize_url(domain_input)
+        if not processed_url:
+            return {"domain": original_domain_input, "error": "Invalid or unreachable URL"}, 400
+
+        print(f"\n--- Processing Domain: {display_domain} (from {original_domain_input}) ---")
+        
         social_links = {}
         emails_found = set()
         phones_found = set()
         
-        default_result_on_error = {
-            'domain': display_domain, 'emails': [], 'phones': [],
-            'instagram': "", 'linkedin': "", 'x': "", 'facebook': "", 'other': ['Error processing domain']
-        }
+        default_result_on_error = {"domain": processed_url, "error": f"Error processing domain: {display_domain} (from {original_domain_input})"}, 500
         
         try:
-            driver = webdriver.Chrome(options=chrome_options)
-            driver.set_page_load_timeout(30)
+            driver_path = os.environ.get("DRIVER_PATH")
+            if driver_path:
+                service = Service(executable_path=driver_path)
+                driver = webdriver.Chrome(service=service, options=chrome_options)
+            else:
+                driver = webdriver.Chrome(options=chrome_options)
+            
+            # Set memory-related options with provided timeout
+            driver.set_page_load_timeout(timeout)
+            driver.set_script_timeout(timeout)
+            
+            # Clear browser cookies before loading
+            driver.delete_all_cookies()
+            
             driver.get(processed_url)
             
             try:
-                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+                WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
             except TimeoutException:
                 print(f"Body not found quickly for {display_domain}, proceeding.")
             
@@ -251,6 +370,9 @@ def scrape_domain(domain_input):
                 return default_result_on_error
             
             soup = BeautifulSoup(page_source, 'html.parser')
+            
+            # Clear page source to free memory
+            page_source = None
             
             # --- Email and Social Link Extraction (from whole page) ---
             all_links = soup.find_all('a', href=True)
@@ -263,7 +385,7 @@ def scrape_domain(domain_input):
                 # EMAILS from mailto:
                 if href.startswith('mailto:'):
                     try:
-                        email_part = unquote(href.split('mailto:', 1)[1].split('?')[0])
+                        email_part = unquote(href.split('mailto:', 1)[1].split('?')[0]).strip()
                         if re.fullmatch(EMAIL_REGEX, email_part):
                             emails_found.add(email_part)
                     except Exception: pass
@@ -285,22 +407,27 @@ def scrape_domain(domain_input):
                     parsed_original_url = urlparse(processed_url) # Use the selenium-loaded URL context
                     if not abs_href.startswith(('http://', 'https://')):
                         if abs_href.startswith('//'):
-                             abs_href = (parsed_original_url.scheme or 'https') + ':' + abs_href
+                            abs_href = (parsed_original_url.scheme or 'https') + ':' + abs_href
                         elif abs_href.startswith('/'):
                             base_url = f"{(parsed_original_url.scheme or 'https')}://{parsed_original_url.netloc}"
                             abs_href = f"{base_url}{abs_href}"
-                        else: 
-                            # If it's not absolute, and not starting with // or /, it might be a malformed or relative link
-                            # that's not easily resolvable to a social media URL. Skip for social check.
-                            if social_type == "other": continue # Only skip if we haven't already ID'd it from tel:
+                        else:
+                            abs_href = (parsed_original_url.scheme or 'https') + '://' + abs_href
+                        # else: 
+                        #     # If it's not absolute, and not starting with // or /, it might be a malformed or relative link
+                        #     # that's not easily resolvable to a social media URL. Skip for social check.
+                        #     if social_type == "other": continue # Only skip if we haven't already ID'd it from tel:
                     
                     social_type, social_url = categorize_social_link(abs_href)
-                    if social_type != "other" and social_type not in social_links : # Store first one found per type
+                    if social_type and social_type not in social_links : # Store first one found per type
                         social_links[social_type] = social_url
                 except Exception:
                     pass # Ignore errors in social link categorization
             
-            # Emails from page text (whole body)
+            # Clear links list to free memory
+            all_links = None
+            
+            # Emails from page text
             if soup.body:
                 try:
                     body_text_for_emails = soup.body.get_text(separator=' ', strip=True)
@@ -326,6 +453,8 @@ def scrape_domain(domain_input):
                 #     footer_text_content = soup.body.get_text(separator=' ', strip=True)
                 #     print(f"Warning: Searching entire body for phones on {display_domain} as no footer found.")
 
+            # Clear footer elements to free memory
+            footer_elements = None
 
             if footer_text_content: # Only search for phones in text if footer content was found
                 try:
@@ -341,24 +470,29 @@ def scrape_domain(domain_input):
                 except Exception as e:
                     print(f"Error regex-finding/filtering phones in footer for {display_domain}: {e}")
             
-            other_socials = []
-            for social_type, url_val in social_links.items():
-                if social_type not in ['instagram', 'linkedin', 'x', 'facebook']:
-                    other_socials.append(url_val)
+            # Clear footer text to free memory
+            footer_text_content = None
+            
+            # Extract logo URL
+            try:
+                logo_url = extract_logo_url(soup, processed_url)
+            except Exception as e:
+                print(f"Error extracting logo URL for {display_domain}: {e}")
+                logo_url = None
+            
+            # Clear soup to free memory
+            soup = None
             
             result = {
-                'domain': display_domain,
+                'domain': processed_url,
+                'logoURL': logo_url,
+                'socialLinks': social_links,
                 'emails': sorted(list(emails_found)),
-                'phones': sorted(list(set(phones_found))), 
-                'instagram': social_links.get('instagram', ''),
-                'linkedin': social_links.get('linkedin', ''),
-                'x': social_links.get('x', ''),
-                'facebook': social_links.get('facebook', ''),
-                'other': sorted(list(set(other_socials)))
+                'phones': sorted(list(set(phones_found)))
             }
             
             print(f"Extraction complete for {display_domain}: {len(emails_found)} emails, {len(phones_found)} plausible phones, {len(social_links)} distinct social categories.")
-            return result
+            return result, 200
             
         except WebDriverException as e:
             print(f"WebDriverException for {display_domain}: {str(e)[:200]}")
@@ -369,17 +503,18 @@ def scrape_domain(domain_input):
             traceback.print_exc()
         finally:
             if driver:
-                driver.quit()
+                try:
+                    driver.quit()
+                except Exception as e:
+                    print(f"Error closing WebDriver for {display_domain}: {e}")
+                driver = None
         
         return default_result_on_error
 
     except Exception as e:
         print(f"Outer unexpected error for input '{original_domain_input}': {e}")
         traceback.print_exc()
-        return {
-            'domain': str(original_domain_input), 'emails': [], 'phones': [],
-            'instagram': "", 'linkedin': "", 'x': "", 'facebook': "", 'other': ['Critical error processing domain']
-        }
+        return default_result_on_error
 
 # The rest of the functions (generate_csv_file, _process_domain_list_and_generate_csv, Flask routes)
 # remain the same as in the previous response.
@@ -417,29 +552,32 @@ def generate_csv_file(results, base_filename_prefix="scraped_data"):
     return None
 
 
-def _process_domain_list_and_generate_csv(domains_list, max_workers, csv_file_prefix):
+def _process_domain_list_and_generate_csv(domains_list, max_workers, csv_file_prefix, generate_csv=True):
     results = []
     valid_domains = [str(d).strip() for d in domains_list if d and isinstance(d, str) and str(d).strip()]
     
     if not valid_domains:
         return [], None, "No valid domains provided for processing."
 
+    # Calculate dynamic timeout based on workers
+    # Base timeout of 30 seconds, add 2 seconds per worker
+    base_timeout = 30
+    worker_factor = max_workers * 6  # Add 2s per worker
+    dynamic_timeout = base_timeout + worker_factor
+
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_domain = {executor.submit(scrape_domain, domain): domain for domain in valid_domains}
-        for i, future in enumerate(future_to_domain):
+        future_to_domain = {executor.submit(scrape_domain, domain, dynamic_timeout): domain for domain in valid_domains}
+        for _, future in enumerate(future_to_domain):
             domain_name = future_to_domain[future]
             try:
-                result = future.result()
+                result, _ = future.result()
                 results.append(result)
             except Exception as e:
                 print(f"Exception processing domain {domain_name} in thread: {e}")
-                results.append({
-                    'domain': domain_name, 'emails': [], 'phones': [], 'instagram': "",
-                    'linkedin': "", 'x': "", 'facebook': "", 'other': [f'Error in thread: {str(e)}']
-                })
+                results.append({"error": f"Error processing domain: {domain_name}"})
     
-    csv_filename = generate_csv_file(results, csv_file_prefix)
-    return results, csv_filename, f"Processed {len(results)} domains." if csv_filename else "Processed domains, but CSV generation failed."
+    csv_filename = generate_csv_file(results, csv_file_prefix) if generate_csv else None
+    return results, csv_filename, f"Processed {len(results)} domains." if csv_filename or not generate_csv else "Processed domains, but CSV generation failed."
 
 
 # --- API Endpoints ---
@@ -460,7 +598,10 @@ def single_request():
 
     print(f"\n--- Single Request: {target_url} ---")
     
-    result = scrape_domain(target_url)
+    result, status_code = scrape_domain(target_url)
+    if "error" in result or status_code != 200:
+        return jsonify(result), status_code or 500
+    
     results_list = [result]
     
     csv_filename = generate_csv_file(results_list, "single_domain")
@@ -494,16 +635,24 @@ def array_request():
     except (ValueError, TypeError):
         max_workers = 5
 
-    print(f"\n--- Array Request: {len(domains_list)} domains, {max_workers} workers ---")
+    generate_csv = data.get('generate_csv', True)
+    if not isinstance(generate_csv, bool):
+        generate_csv = True
+
+    print(f"\n--- Array Request: {len(domains_list)} domains, {max_workers} workers, CSV generation: {generate_csv} ---")
     
-    results, csv_filename, message = _process_domain_list_and_generate_csv(domains_list, max_workers, "array_domains")
+    results, csv_filename, message = _process_domain_list_and_generate_csv(domains_list, max_workers, "array_domains", generate_csv)
     
-    return jsonify({
-        "success": True if csv_filename or results else False,
+    response_data = {
+        "success": True if results else False,
         "message": message,
-        "csv_filename": csv_filename,
         "results": results
-    }), 200
+    }
+    
+    if generate_csv:
+        response_data["csv_filename"] = csv_filename
+    
+    return jsonify(response_data), 200
 
 
 @app.route('/csv-request', methods=['POST'])
@@ -664,6 +813,11 @@ def download_csv(filename):
         return jsonify({"error": f"Error downloading CSV file: {str(e)}"}), 500
 
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Simple health check endpoint."""
+    return jsonify({"status": "active"}), 200
+
 # --- Run the Flask App ---
 if __name__ == '__main__':
     if not os.path.exists(CSV_OUTPUT_FOLDER):
@@ -673,4 +827,6 @@ if __name__ == '__main__':
     if not GOOGLE_SHEET_WORKER_URL:
         print("WARNING: GOOGLE_SHEET_WORKER_URL environment variable is not set. /sheet-request endpoint will not function.")
     
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Set debug=False when deploying to production
+    debug = (os.environ.get("DEBUG") == "True")
+    app.run(host='0.0.0.0', port=5000, debug=debug)
