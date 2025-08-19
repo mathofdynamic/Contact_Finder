@@ -161,6 +161,12 @@ The service provides multiple endpoints for different use cases, from single dom
   - CSV file generation
   - Structured data format
 
+- 🎯 **Lead Finding Tool**
+  - Automated executive profile discovery
+  - LinkedIn and Twitter profile scraping
+  - Decision-maker contact information extraction
+  - Google search automation with Playwright
+
 ## 🛠️ Installation
 
 1. Clone the repository:
@@ -180,10 +186,22 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+4. Install Playwright browsers (for lead finding):
+```bash
+playwright install
+```
+
 4. Create a `.env` file with your configuration:
 ```env
 MY_API_SECRET=your_api_key_here
 GOOGLE_SHEET_WORKER_URL=your_google_sheet_worker_url
+
+# Cookie file paths for lead finding
+GOOGLE_COOKIES_PATH="google-cookie.json"
+LINKEDIN_COOKIES_PATH="linkedin_cookies.json"
+
+# Optional: Proxy for captcha bypass (uncomment and configure if needed)
+# PROXY_URL="http://username:password@proxy.com:8080"
 
 # 'True' for debugging - Optional - Default: False
 DEBUG=False
@@ -202,6 +220,60 @@ python Contact_extractor.py
 ```
 
 The server will start on `http://localhost:5000`
+
+### Lead Finding Tool
+
+The project includes a standalone lead finding script that uses Playwright to discover and scrape contact information for decision-makers at specific companies.
+
+#### Basic Usage
+```bash
+python lead_finder.py
+```
+
+#### Setup for Lead Finding
+1. **Google Cookies**: You already have `google-cookie.json` in your project
+2. **LinkedIn Cookies**: Export cookies from LinkedIn using a browser extension and save as `linkedin_cookies.json`
+3. **Environment Variables**: Ensure your `.env` file includes the cookie paths
+4. **Captcha Handling**: The script includes automatic captcha detection and manual solving options
+
+#### How Lead Finding Works
+1. **Google Search Phase**: Uses targeted search queries to find LinkedIn and Twitter profiles
+2. **Profile Scraping**: Navigates to each profile and extracts key information
+3. **Data Output**: Displays results in structured JSON format
+
+#### Search Queries Used
+- `"Company Name" CEO OR founder site:linkedin.com/in/`
+- `"Company Name" executive site:twitter.com`
+- `"Company Name" CTO site:linkedin.com/in/`
+
+#### Output Format
+The script outputs a list of dictionaries containing:
+- `url`: Profile URL
+- `name`: Person's name
+- `headline`: Job title/headline
+- `error`: Error message if scraping failed
+
+**Note**: LinkedIn cookies expire frequently, so refresh them regularly for best results.
+
+#### Captcha Handling Strategies
+The script includes several strategies to handle Google's captcha challenges:
+
+1. **Automatic Detection**: Detects various types of captchas and unusual activity warnings
+2. **Manual Solving**: Pauses execution and waits for you to solve captchas manually in the browser
+3. **Anti-Detection Measures**: 
+   - User agent rotation
+   - Human-like delays and behavior
+   - Stealth mode with browser fingerprinting evasion
+   - Proxy support (configurable)
+4. **Fallback Options**: Can switch to alternative search engines if Google blocks access
+
+#### Configuration Options
+Edit `captcha_config.py` to customize:
+- User agent rotation
+- Delay timing
+- Proxy settings
+- Search fallbacks
+- Rate limiting
 
 Example production startup with Gunicorn:
 ```
@@ -290,6 +362,8 @@ api-key: your_api_key
 
 - `MY_API_SECRET`: Your API key for authentication
 - `GOOGLE_SHEET_WORKER_URL`: URL for Google Sheets integration
+- `GOOGLE_COOKIES_PATH`: Path to Google cookies file for lead finding
+- `LINKEDIN_COOKIES_PATH`: Path to LinkedIn cookies file for lead finding
 
 ### Chrome Options
 
@@ -333,6 +407,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Selenium WebDriver
 - BeautifulSoup4
 - Python-dotenv
+- Playwright (for lead finding automation)
 
 ---
 
