@@ -1,2 +1,37 @@
 .env
 output_csvs/
+
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# macOS system files
+.DS_Store
+._*
+
+# Generated reports and data
+contact_finder_reports/
+Screenshots/
+
+# Cookie files (sensitive data)
+*_cookies.json
+google-cookie.json
+linkedin_cookies.json
+instagram_cookies.json
+
+# Logs and debug files
+*.log
+debug_*.png
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Virtual environment
+venv/
+env/
+.venv/

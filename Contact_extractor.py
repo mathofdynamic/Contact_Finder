@@ -12,11 +12,12 @@ from urllib.parse import urlparse, unquote
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, send_file
+from typing import Tuple, Union
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import WebDriverException, TimeoutException, NoSuchElementException
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
@@ -329,6 +330,10 @@ def extract_logo_url(soup, base_url):
 def scrape_domain(domain_input, timeout=30):
     original_domain_input = domain_input
     driver = None
+    
+    # Initialize default result early to ensure it's always available
+    default_result_on_error = {"domain": str(domain_input), "error": f"Error processing domain: {domain_input}"}, 500
+    
     try:
         processed_url, display_domain = normalize_url(domain_input)
         if not processed_url:
@@ -336,11 +341,12 @@ def scrape_domain(domain_input, timeout=30):
 
         print(f"\n--- Processing Domain: {display_domain} (from {original_domain_input}) ---")
         
+        # Update default result with processed URL
+        default_result_on_error = {"domain": processed_url, "error": f"Error processing domain: {display_domain} (from {original_domain_input})"}, 500
+        
         social_links = {}
         emails_found = set()
         phones_found = set()
-        
-        default_result_on_error = {"domain": processed_url, "error": f"Error processing domain: {display_domain} (from {original_domain_input})"}, 500
         
         try:
             driver_path = os.environ.get("DRIVER_PATH")
@@ -496,7 +502,6 @@ def scrape_domain(domain_input, timeout=30):
             
         except WebDriverException as e:
             print(f"WebDriverException for {display_domain}: {str(e)[:200]}")
-        except TimeoutException:
             print(f"Page load timeout for {display_domain}")
         except Exception as e:
             print(f"Error processing {display_domain}: {e}")
@@ -582,7 +587,7 @@ def _process_domain_list_and_generate_csv(domains_list, max_workers, csv_file_pr
 
 # --- API Endpoints ---
 
-@app.route('/single-request', methods=['POST'])
+@app.route('/single-request', methods=['POST'])  # type: ignore
 def single_request():
     authenticated, response, status_code = authenticate_request(request)
     if not authenticated:
@@ -614,7 +619,7 @@ def single_request():
     }), 200
 
 
-@app.route('/array-request', methods=['POST'])
+@app.route('/array-request', methods=['POST'])  # type: ignore
 def array_request():
     authenticated, response, status_code = authenticate_request(request)
     if not authenticated:
@@ -655,7 +660,7 @@ def array_request():
     return jsonify(response_data), 200
 
 
-@app.route('/csv-request', methods=['POST'])
+@app.route('/csv-request', methods=['POST'])  # type: ignore
 def csv_request():
     authenticated, response, status_code = authenticate_request(request)
     if not authenticated:
@@ -727,7 +732,7 @@ def csv_request():
     }), 200
 
 
-@app.route('/sheet-request', methods=['POST'])
+@app.route('/sheet-request', methods=['POST'])  # type: ignore
 def sheet_request():
     authenticated, response, status_code = authenticate_request(request)
     if not authenticated:
@@ -752,6 +757,7 @@ def sheet_request():
     print(f"\n--- Sheet Request: (using configured worker), target {target_url}, {max_workers} workers ---")
     
     domains_list = []
+    worker_response = None  # Initialize to avoid unbound variable warning
     try:
         worker_response = requests.post(GOOGLE_SHEET_WORKER_URL, json={"url": target_url}, timeout=60)
         worker_response.raise_for_status()
@@ -771,7 +777,8 @@ def sheet_request():
         print(f"Error communicating with worker: {e}")
         return jsonify({"error": f"Could not connect to worker: {str(e)}"}), 500
     except json.JSONDecodeError:
-        print(f"Error decoding JSON from worker. Response text: {worker_response.text[:200]}")
+        response_text = worker_response.text[:200] if worker_response else "(no response)"
+        print(f"Error decoding JSON from worker. Response text: {response_text}")
         return jsonify({"error": "Invalid JSON response from worker"}), 500
     except Exception as e:
         print(f"Error in sheet request setup: {e}")
@@ -788,7 +795,7 @@ def sheet_request():
     }), 200
 
 
-@app.route('/download-csv/<filename>', methods=['GET'])
+@app.route('/download-csv/<filename>', methods=['GET'])  # type: ignore
 def download_csv(filename):
     authenticated, response, status_code = authenticate_request(request)
     if not authenticated:
