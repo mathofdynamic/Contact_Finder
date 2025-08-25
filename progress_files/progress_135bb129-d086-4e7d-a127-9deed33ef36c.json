@@ -1,0 +1,86 @@
+{
+  "session_id": "135bb129-d086-4e7d-a127-9deed33ef36c",
+  "user_file_name": "Company_domains_-_Sheet1.csv",
+  "total_companies": 20,
+  "processed_companies": 1,
+  "current_company": "eigenlayer.xyz",
+  "is_running": true,
+  "is_paused": true,
+  "start_time": 1756111699.346227,
+  "company_list": [
+    "monad.xyz",
+    "eigenlayer.xyz",
+    "celestia.org",
+    "ritual.net",
+    "berachain.com",
+    "availproject.org",
+    "succinct.xyz",
+    "layerzero.network",
+    "gensyn.ai",
+    "ondo.finance",
+    "centrifuge.io",
+    "movementlabs.xyz",
+    "espressosys.com",
+    "hivemapper.com",
+    "weatherxm.com",
+    "privy.io",
+    "worldcoin.org",
+    "farcaster.xyz",
+    "galactica.com",
+    "ironmill.xyz"
+  ],
+  "results": [
+    {
+      "company_domain": "https://www.monad.xyz",
+      "company_name": "Monad",
+      "company_website_data": {
+        "domain": "https://www.monad.xyz",
+        "logo_url": "https://cdn.prod.website-files.com/667c57e6f9254a4b6d914440/66956efeb01de969bd7b8abc_Logo%20Horizontal.svg",
+        "emails": [],
+        "phones": [],
+        "social_links": {
+          "discord": "https://discord.gg/monaddev",
+          "x": "https://x.com/monad_dev",
+          "linkedin": "https://www.linkedin.com/company/monad-foundation",
+          "telegram": "https://t.me/monad_xyz"
+        },
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 3,
+        "ceo_profiles": {
+          "twitter_x": {
+            "url": "https://x.com/0x_eunice",
+            "name": "",
+            "headline": "",
+            "found": false,
+            "error": null
+          },
+          "linkedin": {
+            "url": "https://www.linkedin.com/in/keone-hon",
+            "name": "Keone Hon",
+            "headline": "",
+            "found": true,
+            "error": null
+          }
+        },
+        "linkedin": "https://www.linkedin.com/in/keone-hon",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756111700,
+      "success": true,
+      "errors": []
+    }
+  ],
+  "errors": []
+}

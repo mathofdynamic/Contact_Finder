@@ -97,9 +97,17 @@ USER_AGENTS = [
 ]
 
 class CompanyContactFinder:
-    def __init__(self):
+    def __init__(self, skip_ceo_on_captcha=False):
         self.company_domain = None
         self.company_name = None
+        self.skip_ceo_on_captcha = skip_ceo_on_captcha  # New option to skip CEO search on captcha
+        
+        # Browser persistence for efficiency
+        self.browser = None
+        self.context = None
+        self.page = None
+        self.playwright_instance = None
+        
         self.results = {
             "company_domain": None,
             "company_name": None,
@@ -114,6 +122,187 @@ class CompanyContactFinder:
         self.output_dir = "contact_finder_reports"
         self.ensure_output_directory()
 
+    def ensure_browser_ready(self):
+        """Initialize browser if not already running - persistent across companies"""
+        try:
+            # Check if browser/context are valid
+            browser_valid = self.browser and not getattr(self.browser, '_closed', True)
+            context_valid = self.context and not getattr(self.context, '_closed', True)
+            
+            if not browser_valid or not context_valid:
+                print("🚀 Initializing persistent browser session...")
+                
+                # Close any existing resources first
+                try:
+                    if self.page:
+                        self.page.close()
+                    if self.context:
+                        self.context.close()
+                    if self.browser:
+                        self.browser.close()
+                    if self.playwright_instance:
+                        self.playwright_instance.stop()
+                except:
+                    pass  # Ignore errors during cleanup
+                
+                # Reset all references
+                self.page = None
+                self.context = None
+                self.browser = None
+                self.playwright_instance = None
+                
+                # Simple thread-safe browser initialization
+                from playwright.sync_api import sync_playwright
+                
+                self.playwright_instance = sync_playwright().start()
+                
+                self.browser = self.playwright_instance.chromium.launch(
+                    headless=True,  # Start headless, show only on captcha
+                    args=[
+                        '--no-sandbox',
+                        '--disable-dev-shm-usage',
+                        '--disable-gpu',
+                        '--disable-features=VizDisplayCompositor',
+                        '--disable-blink-features=AutomationControlled',  # Anti-detection
+                        '--disable-web-security',
+                        '--disable-features=VizDisplayCompositor',
+                        '--start-maximized',
+                        '--disable-extensions-except',
+                        '--disable-plugins-discovery',
+                        '--disable-default-apps',
+                        '--no-first-run',
+                        '--disable-background-timer-throttling',
+                        '--disable-backgrounding-occluded-windows',
+                        '--disable-renderer-backgrounding',
+                        '--disable-features=TranslateUI',
+                        '--disable-ipc-flooding-protection',
+                        '--disable-extensions',
+                        '--disable-plugins',
+                        '--disable-infobars'
+                    ]
+                )
+                
+                # Create context with cookies if available
+                context_options = {
+                    'user_agent': random.choice(USER_AGENTS),
+                    'no_viewport': True,  # Use system default size instead of fixed viewport
+                    'extra_http_headers': {
+                        'Accept-Language': 'en-US,en;q=0.9',
+                        'Accept-Encoding': 'gzip, deflate, br',
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                        'DNT': '1',
+                        'Connection': 'keep-alive',
+                        'Upgrade-Insecure-Requests': '1'
+                    }
+                }
+                
+                self.context = self.browser.new_context(**context_options)
+                
+                # Add stealth scripts to prevent automation detection
+                self.context.add_init_script("""
+                    // Remove webdriver property
+                    Object.defineProperty(navigator, 'webdriver', {
+                        get: () => undefined,
+                    });
+                    
+                    // Mock plugins
+                    Object.defineProperty(navigator, 'plugins', {
+                        get: () => [1, 2, 3, 4, 5],
+                    });
+                    
+                    // Mock languages
+                    Object.defineProperty(navigator, 'languages', {
+                        get: () => ['en-US', 'en'],
+                    });
+                    
+                    // Add chrome object
+                    window.chrome = {
+                        runtime: {},
+                    };
+                    
+                    // Override permissions API
+                    const originalQuery = window.navigator.permissions.query;
+                    window.navigator.permissions.query = (parameters) => (
+                        parameters.name === 'notifications' ?
+                            Promise.resolve({ state: Notification.permission }) :
+                            originalQuery(parameters)
+                    );
+                """)
+                
+                # Load Google cookies if available
+                if os.path.exists(GOOGLE_COOKIES_PATH):
+                    try:
+                        with open(GOOGLE_COOKIES_PATH, 'r') as f:
+                            cookies_data = json.load(f)
+                        
+                        # Convert browser extension cookie format to Playwright format
+                        playwright_cookies = []
+                        for cookie in cookies_data:
+                            playwright_cookie = {
+                                'name': cookie['name'],
+                                'value': cookie['value'],
+                                'domain': cookie['domain'],
+                                'path': cookie['path'],
+                                'httpOnly': cookie.get('httpOnly', False),
+                                'secure': cookie.get('secure', False)
+                            }
+                            
+                            # Handle expires (convert from expirationDate)
+                            if 'expirationDate' in cookie and cookie['expirationDate']:
+                                playwright_cookie['expires'] = int(cookie['expirationDate'])
+                            
+                            # Handle sameSite
+                            if 'sameSite' in cookie and cookie['sameSite']:
+                                samesite_map = {
+                                    'no_restriction': 'None',
+                                    'lax': 'Lax', 
+                                    'strict': 'Strict'
+                                }
+                                playwright_cookie['sameSite'] = samesite_map.get(cookie['sameSite'].lower(), 'Lax')
+                            
+                            playwright_cookies.append(playwright_cookie)
+                        
+                        # Add cookies to the context
+                        self.context.add_cookies(playwright_cookies)
+                        print(f"🍪 Successfully loaded {len(playwright_cookies)} Google cookies for authentication")
+                        
+                    except Exception as e:
+                        print(f"⚠️  Could not load Google cookies: {e}")
+                        print(f"    Error details: {str(e)}")
+                else:
+                    print(f"⚠️  Google cookies file not found at: {GOOGLE_COOKIES_PATH}")
+                
+                # Create a new page for this session
+                self.page = self.context.new_page()
+                
+                print("✅ Persistent browser session initialized and ready")
+                
+            else:
+                print("🌐 Using persistent browser session (no restart needed)")
+                
+        except Exception as e:
+            print(f"❌ Error initializing browser: {e}")
+            raise e
+    
+    def cleanup_browser(self):
+        """Clean up browser resources when done with all processing"""
+        try:
+            if self.page:
+                self.page.close()
+                self.page = None
+            if self.context:
+                self.context.close()
+                self.context = None
+            if self.browser:
+                self.browser.close()
+                self.browser = None
+            if self.playwright_instance:
+                self.playwright_instance.stop()
+                self.playwright_instance = None
+            print("🧹 Browser resources cleaned up")
+        except Exception as e:
+            print(f"⚠️  Error during browser cleanup: {e}")
+    
     def human_like_delay(self, min_delay=2, max_delay=5):
         """Add random delays to mimic human behavior"""
         delay = random.uniform(min_delay, max_delay)
@@ -232,6 +421,85 @@ class CompanyContactFinder:
         
         return True
 
+    def show_browser_for_captcha(self):
+        """Make browser visible when captcha is detected"""
+        try:
+            if self.browser and self.context:
+                # Close current browser and create visible one
+                self.cleanup_browser()
+                
+                # Recreate browser in visible mode
+                self.playwright_instance = sync_playwright().start()
+                self.browser = self.playwright_instance.chromium.launch(
+                    headless=False,  # Make visible for captcha solving
+                    args=[
+                        '--no-sandbox',
+                        '--disable-dev-shm-usage',
+                        '--disable-gpu',
+                        '--start-maximized',
+                        '--disable-blink-features=AutomationControlled'
+                    ]
+                )
+                
+                # Recreate context with same settings
+                context_options = {
+                    'user_agent': random.choice(USER_AGENTS),
+                    'no_viewport': True,
+                    'extra_http_headers': {
+                        'Accept-Language': 'en-US,en;q=0.9',
+                        'Accept-Encoding': 'gzip, deflate, br',
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                        'DNT': '1',
+                        'Connection': 'keep-alive',
+                        'Upgrade-Insecure-Requests': '1'
+                    }
+                }
+                
+                self.context = self.browser.new_context(**context_options)
+                
+                # Reload cookies
+                if os.path.exists(GOOGLE_COOKIES_PATH):
+                    try:
+                        with open(GOOGLE_COOKIES_PATH, 'r') as f:
+                            cookies_data = json.load(f)
+                        
+                        playwright_cookies = []
+                        for cookie in cookies_data:
+                            playwright_cookie = {
+                                'name': cookie['name'],
+                                'value': cookie['value'],
+                                'domain': cookie['domain'],
+                                'path': cookie['path'],
+                                'httpOnly': cookie.get('httpOnly', False),
+                                'secure': cookie.get('secure', False)
+                            }
+                            
+                            if 'expirationDate' in cookie and cookie['expirationDate']:
+                                playwright_cookie['expires'] = int(cookie['expirationDate'])
+                            
+                            if 'sameSite' in cookie and cookie['sameSite']:
+                                samesite_map = {
+                                    'no_restriction': 'None',
+                                    'lax': 'Lax', 
+                                    'strict': 'Strict'
+                                }
+                                playwright_cookie['sameSite'] = samesite_map.get(cookie['sameSite'].lower(), 'Lax')
+                            
+                            playwright_cookies.append(playwright_cookie)
+                        
+                        self.context.add_cookies(playwright_cookies)
+                        print(f"🍪 Reloaded {len(playwright_cookies)} Google cookies for visible browser")
+                        
+                    except Exception as e:
+                        print(f"⚠️  Could not reload cookies: {e}")
+                
+                # Create new page
+                self.page = self.context.new_page()
+                print("👀 Browser is now visible for captcha solving!")
+                
+        except Exception as e:
+            print(f"❌ Error making browser visible: {e}")
+
     def handle_captcha_and_consent(self, page: Page) -> bool:
         """Handle Google captcha challenges and cookie consent dialogs"""
         print("🔍 Checking for captcha or consent dialogs...")
@@ -282,47 +550,93 @@ class CompanyContactFinder:
         
         if captcha_found:
             print("🔒 Captcha challenge detected!")
-            print("🔄 Waiting for manual captcha solution...")
-            print("Please solve the captcha manually in the browser window.")
+            print("👀 Making browser visible for manual captcha solving...")
+            
+            # Show browser for manual captcha solving
+            self.show_browser_for_captcha()
+            
+            print("📝 Please solve the captcha manually in the browser window.")
+            print("🕰️ Script will wait for you to complete it...")
+            
+            # Focus the browser window to bring it to front
+            try:
+                if self.page:
+                    self.page.bring_to_front()
+            except:
+                pass
             
             try:
                 # Wait for captcha to be solved (look for search results)
-                page.wait_for_selector('div.g', timeout=120000)  # 2 minutes timeout
-                print("✅ Captcha appears to be solved! Continuing...")
-                return True
+                print("⏰ Waiting up to 5 minutes for captcha solution...")
+                if self.page:
+                    self.page.wait_for_selector('div.g', timeout=300000)  # 5 minutes timeout
+                    print("✅ Captcha appears to be solved! Continuing...")
+                    return True
+                else:
+                    print("❌ No page available for captcha detection")
+                    return False
             except:
                 print("⏰ Timeout waiting for captcha solution.")
+                print("💡 Tip: Make sure to complete the captcha and wait for search results to appear.")
                 return False
         
         return True
 
-    def search_ceo_profiles(self, company_name: str, page: Page) -> list:
-        """Search Google for CEO profiles only - first result validation approach"""
-        print(f"🔍 Searching for CEO of '{company_name}' (first result only approach)...")
+    def search_ceo_profiles(self, search_domain: str, page: Page) -> list:
+        """Search Google for CEO profiles using domain - first result validation approach"""
+        print(f"🔍 Searching for CEO of '{search_domain}' using domain-based search...")
         
-        # Focused search queries - ONLY CEO, one per platform
+        # Step 1: Visit Google main page first to establish session
+        print("🌐 Step 1: Visiting Google main page to establish session...")
+        try:
+            page.goto("https://www.google.com", wait_until="domcontentloaded")
+            page.wait_for_timeout(5000)  # Wait 5 seconds to look more human
+            print("✅ Google main page loaded successfully")
+            
+            # Simulate human behavior - scroll a bit and move mouse
+            try:
+                page.mouse.move(random.randint(100, 500), random.randint(100, 400))
+                page.wait_for_timeout(1000)
+                page.mouse.move(random.randint(200, 600), random.randint(200, 500))
+                page.wait_for_timeout(2000)  # Additional 2 seconds
+            except:
+                pass
+            
+            # Handle any consent dialogs on main page
+            self.handle_captcha_and_consent(page)
+            page.wait_for_timeout(3000)  # Wait another 3 seconds after consent
+            
+        except Exception as e:
+            print(f"⚠️  Warning: Could not load Google main page: {e}")
+        
+        # Use domain directly in search queries for better accuracy
+        # e.g., "monad.xyz" CEO is more specific than "Monad" CEO
         search_queries = [
-            f'"{company_name}" CEO site:twitter.com',
-            f'"{company_name}" CEO site:x.com', 
-            f'"{company_name}" CEO site:linkedin.com/in/',
-            f'"{company_name}" CEO site:instagram.com',
-            f'"{company_name}" CEO site:tiktok.com'
+            f'"{search_domain}" CEO site:twitter.com',
+            f'"{search_domain}" CEO site:x.com', 
+            f'"{search_domain}" CEO site:linkedin.com/in/',
+            f'"{search_domain}" CEO site:instagram.com',
+            f'"{search_domain}" CEO site:tiktok.com'
         ]
         
         ceo_profiles = []
         
-        for query in search_queries:
-            print(f"  📝 Query: {query}")
+        for i, query in enumerate(search_queries, 1):
+            print(f"  📝 Query {i}/{len(search_queries)}: {query}")
             self.human_like_delay(3, 5)  # Longer delay for precision
             
             try:
-                # Navigate to Google search
-                page.goto(f"https://www.google.com/search?q={query}", wait_until="domcontentloaded")
+                # Step 2: Navigate to Google search from main page
+                print(f"    🔄 Navigating to search...")
+                search_url = f"https://www.google.com/search?q={query}"
+                page.goto(search_url, wait_until="domcontentloaded")
                 
                 # Handle captcha and consent
-                if not self.handle_captcha_and_consent(page):
+                captcha_result = self.handle_captcha_and_consent(page)
+                if not captcha_result:
                     print(f"❌ Failed to handle captcha/consent for query: {query}")
-                    continue
+                    print(f"❌ Stopping CEO search due to captcha failure")
+                    break  # Stop trying other queries if captcha fails
                 
                 # Wait for search results
                 page.wait_for_timeout(4000)
@@ -477,120 +791,109 @@ class CompanyContactFinder:
                         print(f"      🔄 Extracted from Google redirect: {actual_url}")
                         url = actual_url
             except Exception as e:
-                print(f"      ❌ Error extracting from redirect: {e}")
+                print(f"      ⚠️  Error extracting from redirect: {e}")
                 return False
         
-        # Skip obvious Google URLs
-        if "google.com" in url or "/search?" in url:
-            print(f"      ❌ Google internal URL: {url}")
-            return False
-        
-        # Must be a full URL starting with http/https
-        if not url.startswith(('http://', 'https://')):
-            print(f"      ❌ Not a full URL: {url}")
-            return False
-        
-        # Parse URL for detailed validation
         try:
             from urllib.parse import urlparse
-            parsed = urlparse(url)
-            domain = parsed.netloc.lower()
+            parsed = urlparse(url.lower())
+            domain = parsed.netloc.replace('www.', '')
             path = parsed.path.lower()
-            
-            # Remove www. for domain checking
-            if domain.startswith('www.'):
-                domain = domain[4:]
             
             print(f"      🔍 Validating: domain='{domain}', path='{path}'")
             
-            # Platform-specific validation with EXACT format requirements
+            # Twitter/X validation - more flexible
+            if domain in ['twitter.com', 'x.com']:
+                # Accept /username format, but not /username/status/... or /i/... paths
+                if path.startswith('/i/') or path.startswith('/intent/'):
+                    print(f"      ❌ Twitter/X internal link: {path}")
+                    return False
+                if '/status/' in path or '/moments/' in path or '/lists/' in path:
+                    print(f"      ❌ Twitter/X URL must be profile, not post/status: {path}")
+                    return False
+                if path and len(path) > 1:  # Has actual username
+                    username = path.strip('/').split('/')[0]  # Get first part after /
+                    if username and len(username) > 0 and not username.startswith('_'):
+                        print(f"      ✅ Valid Twitter/X profile format: /{username}")
+                        return True
+                print(f"      ❌ Invalid Twitter/X username: {path}")
+                return False
             
-            # 1. LinkedIn: Must be linkedin.com/in/username format
-            if 'linkedin.com' in domain:
-                if not path.startswith('/in/'):
-                    print(f"      ❌ LinkedIn URL must have /in/ path, got: {path}")
-                    return False
-                if path.count('/') != 2:  # Should be /in/username only
-                    print(f"      ❌ LinkedIn URL has too many path segments: {path}")
-                    return False
-                username = path.replace('/in/', '')
-                if not username or len(username) < 2:
-                    print(f"      ❌ LinkedIn username too short: '{username}'")
-                    return False
-                print(f"      ✅ Valid LinkedIn profile format: /in/{username}")
-                return True
+            # LinkedIn validation - more flexible
+            elif domain == 'linkedin.com':
+                # Accept /in/username, /company/name, or /pub/name paths
+                if path.startswith('/in/') or path.startswith('/pub/'):
+                    username = path.replace('/in/', '').replace('/pub/', '').strip('/')
+                    if username and len(username) > 1:
+                        print(f"      ✅ Valid LinkedIn profile format: {path}")
+                        return True
+                elif path.startswith('/company/'):
+                    company = path.replace('/company/', '').strip('/')
+                    if company and len(company) > 1:
+                        print(f"      ✅ Valid LinkedIn company format: {path}")
+                        return True
+                print(f"      ❌ LinkedIn URL must be /in/username or /company/name format, got: {path}")
+                return False
             
-            # 2. X/Twitter: Must be x.com/username or twitter.com/username format (NO extra paths)
-            elif domain in ['x.com', 'twitter.com']:
-                # Must be exactly /username format (one path segment only)
-                if path.count('/') != 1 or not path.startswith('/'):
-                    print(f"      ❌ X/Twitter URL must be /username format, got: {path}")
+            # Instagram validation - more flexible
+            elif domain == 'instagram.com':
+                # Accept /username but not /p/... (posts) or /reel/... or /stories/...
+                if path.startswith('/p/') or path.startswith('/reel/') or path.startswith('/stories/') or path.startswith('/tv/'):
+                    print(f"      ❌ Instagram URL is a post/reel/story, not profile: {path}")
                     return False
-                
-                username = path[1:]  # Remove leading /
-                if not username or len(username) < 2:
-                    print(f"      ❌ X/Twitter username too short: '{username}'")
-                    return False
-                
-                # Check for invalid paths that indicate non-profile pages
-                invalid_paths = ['highlights', 'status', 'search', 'i', 'home', 'notifications', 'messages']
-                if username.lower() in invalid_paths:
-                    print(f"      ❌ X/Twitter URL is not a profile (invalid path): {username}")
-                    return False
-                    
-                print(f"      ✅ Valid X/Twitter profile format: /{username}")
-                return True
+                if path and len(path) > 1:
+                    username = path.strip('/').split('/')[0]  # Get first part after /
+                    if username and len(username) > 0:
+                        print(f"      ✅ Valid Instagram profile format: /{username}")
+                        return True
+                print(f"      ❌ Invalid Instagram username: {path}")
+                return False
             
-            # 3. Instagram: Must be instagram.com/username format (NO /p/, /reel/, etc.)
-            elif 'instagram.com' in domain:
-                # Must be exactly /username format (one path segment only)
-                if path.count('/') != 1 or not path.startswith('/'):
-                    print(f"      ❌ Instagram URL must be /username format, got: {path}")
-                    return False
-                
-                username = path[1:]  # Remove leading /
-                if not username or len(username) < 2:
-                    print(f"      ❌ Instagram username too short: '{username}'")
-                    return False
-                
-                # Check for invalid paths that indicate posts/reels
-                if username in ['p', 'reel', 'tv', 'explore', 'stories']:
-                    print(f"      ❌ Instagram URL is not a profile (invalid path): {username}")
-                    return False
-                    
-                print(f"      ✅ Valid Instagram profile format: /{username}")
-                return True
+            # TikTok validation - more flexible
+            elif domain == 'tiktok.com':
+                # Accept /@username but not /@username/video/... 
+                if path.startswith('/@'):
+                    path_parts = path.split('/')
+                    if len(path_parts) >= 2:  # [@username] or [@username, ...]
+                        username = path_parts[1]  # Get @username part
+                        if username.startswith('@') and len(username) > 1:
+                            # Check if it's just the username or if there's more (like /video/)
+                            if len(path_parts) == 2 or (len(path_parts) == 3 and not path_parts[2]):
+                                print(f"      ✅ Valid TikTok profile format: /{username}")
+                                return True
+                            else:
+                                print(f"      ❌ TikTok URL is a video/post, not just profile: {path}")
+                                return False
+                print(f"      ❌ TikTok URL must be /@username format, got: {path}")
+                return False
             
-            # 4. TikTok: Must be tiktok.com/@username format (MUST have @ symbol)
-            elif 'tiktok.com' in domain:
-                # Must be exactly /@username format
-                if not path.startswith('/@'):
-                    print(f"      ❌ TikTok URL must be /@username format, got: {path}")
-                    return False
-                
-                if path.count('/') != 1:  # Should be /@username only
-                    print(f"      ❌ TikTok URL has too many path segments: {path}")
-                    return False
-                
-                username = path[2:]  # Remove /@
-                if not username or len(username) < 2:
-                    print(f"      ❌ TikTok username too short: '{username}'")
-                    return False
-                
-                # Check for invalid paths that indicate discover/video pages
-                if username.lower() in ['discover', 'video', 'search', 'trending', 'following']:
-                    print(f"      ❌ TikTok URL is not a profile (invalid path): @{username}")
-                    return False
-                    
-                print(f"      ✅ Valid TikTok profile format: /@{username}")
-                return True
+            # YouTube validation
+            elif domain in ['youtube.com', 'youtu.be']:
+                if path.startswith('/c/') or path.startswith('/channel/') or path.startswith('/user/') or path.startswith('/@'):
+                    print(f"      ✅ Valid YouTube channel format: {path}")
+                    return True
+                print(f"      ❌ YouTube URL must be channel format, got: {path}")
+                return False
             
+            # Facebook validation  
+            elif domain == 'facebook.com':
+                # Accept /username or /pages/name/id or /profile.php?id=
+                if path.startswith('/pages/') or path.startswith('/profile.php') or (path and len(path) > 1 and not path.startswith('/watch')):
+                    print(f"      ✅ Valid Facebook profile format: {path}")
+                    return True
+                print(f"      ❌ Invalid Facebook profile format: {path}")
+                return False
+            
+            # For other domains, just check if it has a reasonable path
             else:
-                print(f"      ❌ Unsupported social media platform: {domain}")
+                if path and len(path) > 1:
+                    print(f"      ✅ Valid social media URL: {domain}{path}")
+                    return True
+                print(f"      ❌ URL needs a profile path: {domain}{path}")
                 return False
                 
         except Exception as e:
-            print(f"      ❌ Error parsing URL: {e}")
+            print(f"      ❌ Error validating URL {url}: {e}")
             return False
     
     def get_platform_from_url(self, url: str) -> str:
@@ -930,14 +1233,15 @@ class CompanyContactFinder:
                     "success": False
                 }
             
-            driver.set_page_load_timeout(30)
+            driver.set_page_load_timeout(45)
+            driver.set_script_timeout(30)
             driver.delete_all_cookies()
             
             driver.get(company_url)
             
             # Wait for page to load
             try:
-                WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+                WebDriverWait(driver, 45).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
             except TimeoutException:
                 print(f"⚠️ Body not found quickly, proceeding...")
             
@@ -1101,223 +1405,216 @@ class CompanyContactFinder:
                 except:
                     pass
 
-    def find_company_contacts(self, company_domain: str) -> dict:
-        """Main method to find all company contacts - CEO profiles + website data"""
-        print(f"\n🚀 Starting Company Contact Finder for: {company_domain}")
-        print("=" * 60)
-        
-        self.company_domain = company_domain
-        self.results["company_domain"] = company_domain
-        
-        # Normalize the company URL
-        company_url, display_domain = self.normalize_url(company_domain)
-        if not company_url:
-            self.results["errors"].append("Invalid or unreachable company URL")
-            return self.results
-        
-        # Extract company name for search
-        self.company_name = self.extract_company_name_from_domain(display_domain)
-        self.results["company_name"] = self.company_name
-        
-        print(f"📊 Company: {self.company_name}")
-        print(f"🌐 Website: {company_url}")
-        
-        # Step 1: Search for CEO/Executive profiles using Playwright
-        print(f"\n🔍 STEP 1: Searching for CEO/Executive profiles...")
-        ceo_profiles = []
-        
+    def cleanup_old_reports(self, days_to_keep=30):
+        """Clean up old report files (optional utility)"""
         try:
-            with sync_playwright() as p:
-                # Launch browser with enhanced stealth settings
-                browser = p.chromium.launch(
-                    headless=False,  # Set to True for headless mode
-                    args=[
-                        '--no-sandbox',
-                        '--disable-dev-shm-usage',
-                        '--disable-blink-features=AutomationControlled',
-                        '--disable-web-security',
-                        '--disable-features=VizDisplayCompositor',
-                        '--disable-plugins',
-                        '--no-first-run',
-                        '--no-default-browser-check',
-                        '--disable-default-apps',
-                        '--disable-popup-blocking',
-                        '--disable-translate',
-                        '--disable-background-timer-throttling',
-                        '--disable-renderer-backgrounding',
-                        '--disable-backgrounding-occluded-windows',
-                        '--disable-client-side-phishing-detection',
-                        '--disable-sync',
-                        '--metrics-recording-only',
-                        '--no-report-upload',
-                        '--disable-background-networking',
-                        '--enable-features=NetworkService,NetworkServiceLogging',
-                        '--force-color-profile=srgb',
-                        '--disable-features=TranslateUI'
-                    ]
-                )
-                
-                # Create context with random user agent and extra headers
-                context = browser.new_context(
-                    user_agent=random.choice(USER_AGENTS),
-                    viewport={'width': 1920, 'height': 1080},
-                    extra_http_headers={
-                        'Accept-Language': 'en-US,en;q=0.9',
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                        'Accept-Encoding': 'gzip, deflate, br',
-                        'DNT': '1',
-                        'Connection': 'keep-alive',
-                        'Upgrade-Insecure-Requests': '1',
-                    }
-                )
-                
-                # Load Google cookies if available
-                if os.path.exists(GOOGLE_COOKIES_PATH):
-                    try:
-                        with open(GOOGLE_COOKIES_PATH, 'r') as f:
-                            raw_cookies = json.load(f)
+            from datetime import datetime, timedelta
+            cutoff_date = datetime.now() - timedelta(days=days_to_keep)
+            
+            deleted_count = 0
+            total_size_freed = 0
+            
+            for root, dirs, files in os.walk(self.output_dir):
+                for file in files:
+                    if file.endswith('.json'):
+                        file_path = os.path.join(root, file)
+                        file_time = datetime.fromtimestamp(os.path.getmtime(file_path))
                         
-                        # Convert cookies to Playwright format
-                        playwright_cookies = []
-                        for cookie in raw_cookies:
-                            # Convert sameSite field to proper format
-                            same_site = cookie.get('sameSite')
-                            if same_site is None:
-                                same_site = 'None'
-                            elif same_site == 'no_restriction':
-                                same_site = 'None'
-                            elif same_site == 'lax':
-                                same_site = 'Lax'
-                            elif same_site == 'strict':
-                                same_site = 'Strict'
-                            
-                            playwright_cookie = {
-                                'name': cookie['name'],
-                                'value': cookie['value'],
-                                'domain': cookie['domain'],
-                                'path': cookie['path'],
-                                'httpOnly': cookie.get('httpOnly', False),
-                                'secure': cookie.get('secure', False),
-                                'sameSite': same_site
-                            }
-                            
-                            # Add expiration if present and not a session cookie
-                            if not cookie.get('session', False) and 'expirationDate' in cookie:
-                                playwright_cookie['expires'] = int(cookie['expirationDate'])
-                            
-                            playwright_cookies.append(playwright_cookie)
-                        
-                        context.add_cookies(playwright_cookies)
-                        print(f"✅ Google cookies loaded successfully ({len(playwright_cookies)} cookies)")
-                    except Exception as e:
-                        print(f"⚠️ Could not load Google cookies: {e}")
-                        print("🔄 Continuing without cookies...")
-                
-                page = context.new_page()
-                
-                # Add extra stealth measures
-                page.add_init_script("""
-                    // Remove webdriver property
-                    Object.defineProperty(navigator, 'webdriver', {
-                        get: () => undefined,
-                    });
-                    
-                    // Mock plugins
-                    Object.defineProperty(navigator, 'plugins', {
-                        get: () => [1, 2, 3, 4, 5],
-                    });
-                    
-                    // Mock languages
-                    Object.defineProperty(navigator, 'languages', {
-                        get: () => ['en-US', 'en'],
-                    });
-                    
-                    // Mock permissions
-                    const originalQuery = window.navigator.permissions.query;
-                    window.navigator.permissions.query = (parameters) => (
-                        parameters.name === 'notifications' ?
-                            Promise.resolve({ state: Notification.permission }) :
-                            originalQuery(parameters)
-                    );
-                """)
-                
-                # Search for CEO profiles
-                profile_urls = self.search_ceo_profiles(self.company_name, page)
-                
-                # Scrape each CEO profile for detailed information
-                ceo_profiles_data = []
-                for profile_url in profile_urls:
-                    self.human_like_delay(2, 4)  # Respectful delay between profile scraping
-                    profile_data = self.scrape_profile_info(profile_url, page)
-                    ceo_profiles_data.append(profile_data)
-                
-                browser.close()
+                        if file_time < cutoff_date:
+                            file_size = os.path.getsize(file_path)
+                            os.remove(file_path)
+                            deleted_count += 1
+                            total_size_freed += file_size
+            
+            if deleted_count > 0:
+                size_mb = total_size_freed / (1024 * 1024)
+                print(f"🧽 Cleaned up {deleted_count} old reports ({size_mb:.2f} MB freed)")
+            else:
+                print(f"🧽 No old reports to clean up (keeping {days_to_keep} days)")
                 
         except Exception as e:
-            error_msg = f"Error in CEO profile search: {e}"
+            print(f"⚠️ Error during cleanup: {e}")
+
+
+    def find_company_contacts(self, company_input: str) -> dict:
+        """
+        Main method to find company contacts - used by web interface
+        
+        Args:
+            company_input: Company domain or name
+            
+        Returns:
+            dict: Complete results with CEO and company data
+        """
+        try:
+            print(f"\n🎯 Processing: {company_input}")
+            print("=" * 60)
+            
+            # Initialize results for this company
+            self.__init__()  # Reset state for new company
+            
+            # Step 1: Process and normalize the company input
+            company_url, company_domain = self.normalize_url(company_input)
+            if not company_url:
+                error_msg = f"Invalid or unreachable URL: {company_input}"
+                print(f"❌ {error_msg}")
+                self.results["errors"].append(error_msg)
+                self.results["company_domain"] = company_input
+                self.results["success"] = False
+                return self.results
+            
+            # Set company information
+            self.company_domain = company_domain
+            self.company_name = self.extract_company_name_from_domain(company_domain)  # For display only
+            # Use the actual domain for search instead of extracted name for better accuracy
+            self.search_term = company_domain  # Use domain directly for more accurate searches
+            self.results["company_domain"] = company_url
+            self.results["company_name"] = self.company_name
+            
+            print(f"🏢 Company: {self.company_name}")
+            print(f"🌐 Website: {company_url}")
+            print(f"🔍 Search Term: {self.search_term}")
+            
+            # Step 2: Find CEO profiles using Google search
+            print(f"\n👤 STEP 1: Searching for CEO profiles...")
+            ceo_profiles_data = []
+            
+            try:
+                # Initialize persistent browser if needed
+                self.ensure_browser_ready()
+                
+                # Ensure we have a valid page (don't close existing page unnecessarily)
+                page_valid = self.page and not getattr(self.page, '_closed', True)
+                if not page_valid:
+                    if self.context:
+                        self.page = self.context.new_page()
+                    else:
+                        raise Exception("No browser context available - browser initialization failed")
+                
+                print(f"🌐 Using persistent browser session (no restart needed)")
+                
+                # Search for CEO profiles using the domain directly
+                if not self.page:
+                    raise Exception("No page available for CEO search")
+                    
+                profile_urls = self.search_ceo_profiles(self.search_term, self.page)
+                
+                # Enhanced logging for found profiles
+                if profile_urls:
+                    print(f"✅ Found {len(profile_urls)} CEO profile(s):")
+                    for i, url in enumerate(profile_urls, 1):
+                        platform = self.get_platform_from_url(url)
+                        print(f"   {i}. {platform}: {url}")
+                else:
+                    print(f"❌ No CEO profiles found")
+                
+                # Check if CEO search was skipped due to captcha
+                if not profile_urls and self.skip_ceo_on_captcha:
+                    print("⏭️  CEO search was skipped due to captcha detection")
+                    self.results["errors"].append("CEO search skipped due to captcha challenge")
+                
+                # Just collect profile URLs - no need to scrape them individually
+                ceo_profiles_data = []
+                for i, profile_url in enumerate(profile_urls, 1):
+                    platform = self.get_platform_from_url(profile_url)
+                    
+                    # Just store the URL and platform - no scraping needed
+                    profile_data = {
+                        "url": profile_url,
+                        "platform": platform.lower().replace("/", "_"),
+                        "name": f"CEO Profile {i}",  # Generic name since we're not scraping
+                        "headline": "Profile found via Google search",
+                        "found": True,
+                        "error": None
+                    }
+                    ceo_profiles_data.append(profile_data)
+                
+            except Exception as e:
+                error_msg = f"Error in CEO profile search: {e}"
+                print(f"❌ {error_msg}")
+                self.results["errors"].append(error_msg)
+                ceo_profiles_data = []
+            
+            # Organize CEO data by platform
+            ceo_data = {
+                "search_method": "first_result_validation",
+                "platforms_searched": ["Twitter/X", "LinkedIn", "Instagram", "TikTok"],
+                "profiles_found": len(ceo_profiles_data),
+                "ceo_profiles": {}
+            }
+            
+            # Group by platform for cleaner presentation
+            for profile in ceo_profiles_data:
+                platform = profile.get("platform", "unknown")
+                ceo_data["ceo_profiles"][platform] = {
+                    "url": profile.get("url"),
+                    "name": profile.get("name"),
+                    "headline": profile.get("headline"),
+                    "found": bool(profile.get("name")),
+                    "error": profile.get("error")
+                }
+            
+            # Add direct platform links for web interface
+            ceo_data["linkedin"] = ceo_data["ceo_profiles"].get("linkedin", {}).get("url", "")
+            ceo_data["twitter"] = ceo_data["ceo_profiles"].get("twitter", {}).get("url", "")
+            ceo_data["x"] = ceo_data["ceo_profiles"].get("x", {}).get("url", "")
+            ceo_data["instagram"] = ceo_data["ceo_profiles"].get("instagram", {}).get("url", "")
+            ceo_data["tiktok"] = ceo_data["ceo_profiles"].get("tiktok", {}).get("url", "")
+            
+            self.results["ceo_data"] = ceo_data
+            
+            # Count successful CEO finds
+            successful_ceo_finds = sum(1 for p in ceo_profiles_data if p.get("name"))
+            print(f"✅ CEO search complete: {successful_ceo_finds} successful profile(s) found")
+            
+            # Step 3: Scrape company website for contact information
+            print(f"\n🌐 STEP 2: Scraping company website for contacts...")
+            
+            website_data = self.scrape_company_website(company_url)
+            self.results["company_website_data"] = website_data
+            
+            if website_data.get("success"):
+                emails = website_data.get("emails", [])
+                phones = website_data.get("phones", [])
+                socials = website_data.get("socialLinks", {})
+                
+                emails_count = len(emails)
+                phones_count = len(phones)
+                socials_count = len(socials)
+                
+                print(f"✅ Website scraping complete: {emails_count} emails, {phones_count} phones, {socials_count} social links")
+                
+                # Detailed logging of found items
+                if emails:
+                    print(f"   📧 Emails found: {', '.join(emails[:3])}{'...' if len(emails) > 3 else ''}")
+                if phones:
+                    print(f"   📞 Phones found: {', '.join(phones[:3])}{'...' if len(phones) > 3 else ''}")
+                if socials:
+                    social_platforms = list(socials.keys())
+                    print(f"   🔗 Social platforms: {', '.join(social_platforms[:5])}{'...' if len(social_platforms) > 5 else ''}")
+            else:
+                error = website_data.get('error', 'Unknown error')
+                print(f"❌ Website scraping failed: {error}")
+            # Mark as successful if we got some data
+            if (successful_ceo_finds > 0 or website_data.get("success")):
+                self.results["success"] = True
+            
+            print(f"\n📋 SUMMARY:")
+            print(f"   🏢 Company: {self.company_name}")
+            print(f"   👤 CEO Profiles Found: {successful_ceo_finds}")
+            print(f"   📧 Company Emails: {len(website_data.get('emails', []))}")
+            print(f"   📞 Company Phones: {len(website_data.get('phones', []))}")
+            print(f"   🔗 Social Links: {len(website_data.get('socialLinks', {}))}")
+            print("=" * 60)
+            
+            return self.results
+            
+        except Exception as e:
+            error_msg = f"Critical error processing {company_input}: {e}"
             print(f"❌ {error_msg}")
             self.results["errors"].append(error_msg)
-            ceo_profiles_data = []
-        
-        # Organize CEO data by platform
-        ceo_data = {
-            "search_method": "first_result_validation",
-            "platforms_searched": ["Twitter/X", "LinkedIn", "Instagram", "TikTok"],
-            "profiles_found": len(ceo_profiles_data),
-            "ceo_profiles": {}
-        }
-        
-        # Group by platform for cleaner presentation
-        for profile in ceo_profiles_data:
-            platform = profile.get("platform", "unknown")
-            ceo_data["ceo_profiles"][platform] = {
-                "url": profile.get("url"),
-                "name": profile.get("name"),
-                "headline": profile.get("headline"),
-                "found": bool(profile.get("name")),
-                "error": profile.get("error")
-            }
-        
-        self.results["ceo_data"] = ceo_data
-        
-        # Count successful CEO finds
-        successful_ceo_finds = sum(1 for p in ceo_profiles_data if p.get("name"))
-        print(f"✅ CEO search complete: {successful_ceo_finds} successful profile(s) found")
-        
-        # Step 2: Scrape company website for contact information
-        print(f"\n🌐 STEP 2: Scraping company website for contacts...")
-        
-        website_data = self.scrape_company_website(company_url)
-        self.results["company_website_data"] = website_data
-        
-        if website_data.get("success"):
-            emails_count = len(website_data.get("emails", []))
-            phones_count = len(website_data.get("phones", []))
-            socials_count = len(website_data.get("social_links", {}))
-            print(f"✅ Website scraping complete: {emails_count} emails, {phones_count} phones, {socials_count} social links")
-        else:
-            print(f"❌ Website scraping failed: {website_data.get('error', 'Unknown error')}")
-        
-        # Mark as successful if we got some data
-        if (successful_ceo_finds > 0 or website_data.get("success")):
-            self.results["success"] = True
-        
-        print(f"\n📋 SUMMARY:")
-        print(f"   🏢 Company: {self.company_name}")
-        print(f"   👤 CEO Profiles Found: {successful_ceo_finds} (first result validation)")
-        
-        # Show which platforms found the CEO
-        for platform, data in ceo_data.get("ceo_profiles", {}).items():
-            status = "✅" if data.get("found") else "❌"
-            name = f" - {data.get('name')}" if data.get("name") else ""
-            print(f"     {status} {platform.title()}{name}")
-        
-        print(f"   📧 Company Emails: {len(website_data.get('emails', []))}")
-        print(f"   📞 Company Phones: {len(website_data.get('phones', []))}")
-        print(f"   🔗 Social Links: {len(website_data.get('social_links', {}))}")
-        print("=" * 60)
-        
-        return self.results
+            self.results["success"] = False
+            return self.results
 
     def save_results_to_json(self, filename=None):
         """Save results to organized JSON file"""
@@ -1377,37 +1674,6 @@ class CompanyContactFinder:
                 
         except Exception as e:
             print(f"   ⚠️ Error reading directory: {e}")
-
-    def cleanup_old_reports(self, days_to_keep=30):
-        """Clean up old report files (optional utility)"""
-        try:
-            from datetime import datetime, timedelta
-            cutoff_date = datetime.now() - timedelta(days=days_to_keep)
-            
-            deleted_count = 0
-            total_size_freed = 0
-            
-            for root, dirs, files in os.walk(self.output_dir):
-                for file in files:
-                    if file.endswith('.json'):
-                        file_path = os.path.join(root, file)
-                        file_time = datetime.fromtimestamp(os.path.getmtime(file_path))
-                        
-                        if file_time < cutoff_date:
-                            file_size = os.path.getsize(file_path)
-                            os.remove(file_path)
-                            deleted_count += 1
-                            total_size_freed += file_size
-            
-            if deleted_count > 0:
-                size_mb = total_size_freed / (1024 * 1024)
-                print(f"🧽 Cleaned up {deleted_count} old reports ({size_mb:.2f} MB freed)")
-            else:
-                print(f"🧽 No old reports to clean up (keeping {days_to_keep} days)")
-                
-        except Exception as e:
-            print(f"⚠️ Error during cleanup: {e}")
-
 
 def main():
     """Main execution function"""

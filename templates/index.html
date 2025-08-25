@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Finder - Professional Contact Extraction</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <!-- SocketIO -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-search"></i>
+                    <span>Contact Finder</span>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-outline" onclick="showHelp()">
+                        <i class="fas fa-question-circle"></i>
+                        Help
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Welcome Section -->
+            <section class="welcome-section" id="welcomeSection">
+                <div class="welcome-content">
+                    <h1 class="welcome-title">
+                        Professional Contact Extraction
+                        <span class="gradient-text">Made Simple</span>
+                    </h1>
+                    <p class="welcome-description">
+                        Upload your CSV file with company domains and let our advanced system extract 
+                        comprehensive contact information including emails, phone numbers, social media profiles, 
+                        and executive contacts.
+                    </p>
+                    
+                    <!-- Upload Area -->
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-content">
+                            <div class="upload-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <h3>Upload Company List</h3>
+                            <p>Drag & drop your CSV file here or click to browse</p>
+                            <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" multiple="false">
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                                <i class="fas fa-upload"></i>
+                                Choose File
+                            </button>
+                            <div class="upload-info">
+                                <small>Supported formats: CSV, XLSX, XLS (Max: 16MB)</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- File Preview -->
+                    <div class="file-preview hidden" id="filePreview">
+                        <div class="file-info">
+                            <div class="file-icon">
+                                <i class="fas fa-file-csv"></i>
+                            </div>
+                            <div class="file-details">
+                                <h4 id="fileName">filename.csv</h4>
+                                <p id="fileStats">0 companies detected</p>
+                            </div>
+                            <button class="btn btn-danger btn-sm" onclick="removeFile()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="companies-preview">
+                            <h5>Companies Preview:</h5>
+                            <ul id="companiesPreviewList"></ul>
+                        </div>
+                        
+                        <button class="btn btn-success btn-lg" onclick="startProcessing()" id="startBtn">
+                            <i class="fas fa-play"></i>
+                            Start Processing
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Processing Section -->
+            <section class="processing-section hidden" id="processingSection">
+                <div class="processing-header">
+                    <h2>Processing Companies</h2>
+                    <div class="processing-controls">
+                        <button class="btn btn-warning" onclick="pauseProcessing()" id="pauseBtn">
+                            <i class="fas fa-pause"></i>
+                            Pause
+                        </button>
+                        <button class="btn btn-success hidden" onclick="resumeProcessing()" id="resumeBtn">
+                            <i class="fas fa-play"></i>
+                            Resume
+                        </button>
+                        <button class="btn btn-outline" onclick="downloadResults()" id="downloadBtn" disabled>
+                            <i class="fas fa-download"></i>
+                            Download CSV
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Progress Card -->
+                <div class="progress-card">
+                    <div class="progress-header">
+                        <h3>Overall Progress</h3>
+                        <span class="progress-percentage" id="progressPercentage">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-stats">
+                        <div class="stat">
+                            <span class="stat-label">Processed:</span>
+                            <span class="stat-value" id="processedCount">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Remaining:</span>
+                            <span class="stat-value" id="remainingCount">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Success:</span>
+                            <span class="stat-value success" id="successCount">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Errors:</span>
+                            <span class="stat-value error" id="errorCount">0</span>
+                        </div>
+                    </div>
+                    <div class="current-processing">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span id="currentCompany">Initializing...</span>
+                    </div>
+                </div>
+
+                <!-- Live Results Table -->
+                <div class="results-section">
+                    <h3>Live Results</h3>
+                    <div class="table-container">
+                        <table class="results-table" id="resultsTable">
+                            <thead>
+                                <tr>
+                                    <th>Company</th>
+                                    <th>Status</th>
+                                    <th>Emails Found</th>
+                                    <th>Phones Found</th>
+                                    <th>Social Links</th>
+                                    <th>CEO LinkedIn</th>
+                                    <th>CEO Twitter</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsTableBody">
+                                <!-- Results will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Live Log -->
+                <div class="log-section">
+                    <h3>Live Processing Log</h3>
+                    <div class="log-container" id="logContainer">
+                        <!-- Log messages will appear here -->
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+            </div>
+            <h3>Processing your file...</h3>
+            <p>Please wait while we analyze your company list</p>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal hidden" id="helpModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>How to Use Contact Finder</h3>
+                <button class="modal-close" onclick="hideHelp()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="help-section">
+                    <h4>📁 File Requirements</h4>
+                    <ul>
+                        <li>Upload CSV, XLSX, or XLS files (Max 16MB)</li>
+                        <li>File should contain company domains or names</li>
+                        <li>System auto-detects the relevant column</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>⚡ What We Extract</h4>
+                    <ul>
+                        <li><strong>Company Data:</strong> Emails, phone numbers, social media links</li>
+                        <li><strong>Executive Profiles:</strong> CEO LinkedIn, Twitter, Instagram, TikTok</li>
+                        <li><strong>Structured Output:</strong> Professional CSV export</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>🎛️ Controls</h4>
+                    <ul>
+                        <li><strong>Pause/Resume:</strong> Stop processing at any time</li>
+                        <li><strong>Live Updates:</strong> Watch results appear in real-time</li>
+                        <li><strong>Progress Tracking:</strong> See completed vs. remaining items</li>
+                        <li><strong>CSV Export:</strong> Download results anytime</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>📊 Example CSV Format</h4>
+                    <pre><code>Company domains
+monad.xyz
+eigenlayer.xyz
+celestia.org
+ritual.net</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer">
+        <!-- Toast notifications will appear here -->
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

@@ -151,6 +151,21 @@ The service provides multiple endpoints for different use cases, from single dom
   - CSV file processing
   - Google Sheets integration
 
+- 🌐 **Professional Web Interface** (NEW!)
+  - Modern, responsive web UI with drag & drop file upload
+  - Real-time progress tracking with WebSocket updates  
+  - Live results table that updates per domain processed
+  - Pause/Resume functionality for large batches
+  - Professional CSV export with comprehensive data
+  - Live processing logs with color-coded messages
+  - Progress persistence (resume interrupted sessions)
+  - Multi-format support (CSV, XLSX, XLS files up to 16MB)
+  - Smart column detection for company domains/names
+  - Comprehensive data extraction per company
+  - Interactive animations and professional UI/UX
+  - Mobile-responsive design
+  - Session management with automatic saving
+
 - 🔒 **Security**
   - API key authentication
   - Secure request handling
@@ -191,7 +206,12 @@ pip install -r requirements.txt
 playwright install
 ```
 
-4. Create a `.env` file with your configuration:
+5. Install web interface dependencies:
+```bash
+pip install -r requirements_web.txt
+```
+
+6. Create a `.env` file with your configuration:
 ```env
 MY_API_SECRET=your_api_key_here
 GOOGLE_SHEET_WORKER_URL=your_google_sheet_worker_url
@@ -220,6 +240,175 @@ python Contact_extractor.py
 ```
 
 The server will start on `http://localhost:5000`
+
+### Web Interface (Recommended for Batch Processing)
+
+For an easier, more visual way to process multiple companies, use the professional web interface:
+
+```bash
+# Start the web interface
+python3 web_interface.py
+```
+
+The web interface will be available at `http://localhost:5001`
+
+#### 🌐 Web Interface Features:
+
+- **📁 Smart File Upload**: Drag & drop CSV/XLSX/XLS files (up to 16MB)
+- **🔄 Real-time Processing**: Live progress bar and statistics with WebSocket updates
+- **📊 Live Results Table**: See results appear as companies are processed
+- **⏸️ Pause/Resume**: Stop and continue processing anytime
+- **📋 Live Logs**: Color-coded processing messages in real-time
+- **💾 Progress Persistence**: Resume interrupted sessions automatically
+- **📄 Professional CSV Export**: Download results anytime during or after processing
+- **🎨 Modern UI/UX**: Professional design with smooth animations
+- **📱 Responsive Design**: Works perfectly on desktop, tablet, and mobile
+- **🔍 Smart Detection**: Automatically detects company domain/name columns
+- **🛡️ Security**: File validation, session isolation, secure uploads
+- **⚡ Performance**: Background processing with threading support
+- **📈 Analytics**: Real-time statistics and success/error tracking
+
+#### 📝 Supported CSV Format:
+```csv
+Company domains
+monad.xyz
+eigenlayer.xyz
+celestia.org
+ritual.net
+berachain.com
+```
+
+#### 📊 What Gets Extracted Per Company:
+- 📧 **Website Emails**
+- 📞 **Phone Numbers**
+- 🔗 **Social Media Links**
+- 👤 **CEO LinkedIn Profile**
+- 🐦 **CEO Twitter/X Profile**
+- 📸 **CEO Instagram Profile**
+- 🎵 **CEO TikTok Profile**
+
+#### 🎯 Web Interface Workflow:
+1. **Upload CSV**: Drag & drop or browse for your company list
+2. **Preview**: Review detected companies and column selection
+3. **Start Processing**: Begin extraction with one click
+4. **Monitor**: Watch real-time progress, live results, and processing logs
+5. **Control**: Pause/resume processing anytime as needed
+6. **Download**: Get professional CSV export with comprehensive data
+
+#### 🛠️ Web Interface Technical Details:
+
+**Backend Architecture:**
+- Flask application with SocketIO for real-time communication
+- Background processing using Python threading
+- Session management with persistent progress tracking
+- Secure file upload and validation
+- RESTful API endpoints for all operations
+
+**Frontend Technology:**
+- Modern HTML5 with semantic, accessible markup
+- CSS3 with smooth animations and transitions
+- JavaScript ES6+ with WebSocket client integration
+- Responsive design with mobile-first approach
+- Progressive enhancement (works without JavaScript)
+
+**Data Flow:**
+1. File Upload → Parsed and validated
+2. Session Creation → Unique session ID generated
+3. Background Processing → Companies processed in separate thread
+4. WebSocket Updates → Real-time progress and results
+5. CSV Export → Continuous saving and download capability
+
+**Security Features:**
+- File type and size validation (16MB max)
+- Secure upload directory with path sanitization
+- Session isolation and CORS protection
+- Prevention of directory traversal attacks
+
+#### 🔧 Web Interface Configuration:
+
+**File Upload Settings:**
+```python
+MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+ALLOWED_EXTENSIONS = {'csv', 'xlsx', 'xls'}
+```
+
+**Processing Settings:**
+```python
+# Adjust timeout and delays in company_contact_finder.py
+PROCESSING_TIMEOUT = 30  # seconds per company
+DELAY_BETWEEN_REQUESTS = 2  # seconds
+```
+
+**UI Customization:**
+```css
+/* Modify colors in static/css/main.css */
+:root {
+    --primary: #2563eb;
+    --success: #059669;
+    --warning: #d97706;
+    --danger: #dc2626;
+}
+```
+
+#### 🚨 Web Interface Troubleshooting:
+
+**Common Issues:**
+
+1. **"WebSocket connection failed"**
+   - Check if port 5001 is available
+   - Ensure firewall allows connections
+   - Try restarting the application
+
+2. **"Failed to process companies"**
+   - Verify internet connection
+   - Check if Playwright browsers are installed: `playwright install`
+   - Review browser console for errors
+
+3. **"File upload failed"**
+   - Check file size (max 16MB)
+   - Ensure file format is CSV/XLSX/XLS
+   - Verify file is not corrupted
+
+4. **"No companies detected"**
+   - Check CSV format and encoding
+   - Ensure first row contains company domains/names
+   - Try different column if detection is wrong
+
+**Performance Tips:**
+- Optimal batch size: 10-50 companies per batch
+- Ensure stable internet connection for web scraping
+- Close unnecessary browser tabs when processing
+- Regular automatic saves prevent data loss
+
+#### 📊 Web Interface Data Output:
+
+The web interface extracts comprehensive data for each company:
+
+**Company Website Data:**
+- All email addresses found on the website
+- Contact phone numbers (validated for accuracy)
+- Social media links (all platforms)
+- Company logo URL
+
+**CEO/Executive Profiles:**
+- LinkedIn profile URL
+- Twitter/X profile URL
+- Instagram profile URL
+- TikTok profile URL
+
+**CSV Export Format:**
+Results are exported with these columns:
+- Company Domain
+- Company Name  
+- Website Emails
+- Website Phones
+- Website Social Links
+- CEO LinkedIn
+- CEO Twitter/X
+- CEO Instagram
+- CEO TikTok
+- Processing Status
+- Timestamp
 
 ### Lead Finding Tool
 
@@ -287,6 +476,8 @@ docker compose logs -f # Run to see logs
 ```
 
 ### API Endpoints
+
+**Note**: For batch processing, we recommend using the web interface above. The API endpoints below are for direct integration.
 
 #### 1. Single Domain Request
 Process a single domain for contact information.
@@ -364,6 +555,17 @@ api-key: your_api_key
 - `GOOGLE_SHEET_WORKER_URL`: URL for Google Sheets integration
 - `GOOGLE_COOKIES_PATH`: Path to Google cookies file for lead finding
 - `LINKEDIN_COOKIES_PATH`: Path to LinkedIn cookies file for lead finding
+- `DEBUG`: Set to `True` for development mode (optional)
+
+### Web Interface Configuration
+
+The web interface uses additional settings:
+- **Upload Directory**: `uploads/` (auto-created)
+- **Progress Files**: `progress_files/` (for session persistence)
+- **Results Export**: `results/` (for CSV downloads)
+- **Max File Size**: 16MB for CSV/Excel uploads
+- **WebSocket Port**: 5001 (configurable in web_interface.py)
+- **Session Management**: Automatic session persistence and recovery
 
 ### Chrome Options
 
@@ -375,7 +577,8 @@ The service uses headless Chrome for web scraping with the following configurati
 
 ## 📊 Output Format
 
-The CSV output includes the following columns:
+### API CSV Output
+The API CSV output includes the following columns:
 - Domain
 - Emails
 - Phone Numbers
@@ -384,6 +587,20 @@ The CSV output includes the following columns:
 - X (Twitter)
 - Facebook
 - Other Socials
+
+### Web Interface CSV Output
+The web interface provides enhanced CSV export with:
+- Company Domain
+- Company Name
+- Website Emails
+- Website Phones
+- Website Social Links
+- CEO LinkedIn
+- CEO Twitter/X
+- CEO Instagram
+- CEO TikTok
+- Processing Status
+- Timestamp
 
 ## 🔒 Security Considerations
 

@@ -1,0 +1,340 @@
+{
+  "session_id": "43ef87b3-cb76-446e-9e0f-09c58a7418ed",
+  "user_file_name": "Company_domains_-_Sheet1.csv",
+  "total_companies": 20,
+  "processed_companies": 8,
+  "current_company": "gensyn.ai",
+  "is_running": true,
+  "is_paused": false,
+  "start_time": 1756113322.3370152,
+  "company_list": [
+    "monad.xyz",
+    "eigenlayer.xyz",
+    "celestia.org",
+    "ritual.net",
+    "berachain.com",
+    "availproject.org",
+    "succinct.xyz",
+    "layerzero.network",
+    "gensyn.ai",
+    "ondo.finance",
+    "centrifuge.io",
+    "movementlabs.xyz",
+    "espressosys.com",
+    "hivemapper.com",
+    "weatherxm.com",
+    "privy.io",
+    "worldcoin.org",
+    "farcaster.xyz",
+    "galactica.com",
+    "ironmill.xyz"
+  ],
+  "results": [
+    {
+      "company_domain": "https://www.monad.xyz",
+      "company_name": "Monad",
+      "company_website_data": {
+        "domain": "https://www.monad.xyz",
+        "logo_url": "https://cdn.prod.website-files.com/667c57e6f9254a4b6d914440/66956efeb01de969bd7b8abc_Logo%20Horizontal.svg",
+        "emails": [],
+        "phones": [],
+        "social_links": {
+          "discord": "https://discord.gg/monaddev",
+          "x": "https://x.com/monad_dev",
+          "linkedin": "https://www.linkedin.com/company/monad-foundation",
+          "telegram": "https://t.me/monad_xyz"
+        },
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 0,
+        "ceo_profiles": {},
+        "linkedin": "",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756113323,
+      "success": true,
+      "errors": [
+        "Error in CEO profile search: cannot switch to a different thread (which happens to have exited)"
+      ]
+    },
+    {
+      "company_domain": "https://www.eigencloud.xyz",
+      "company_name": "Eigencloud",
+      "company_website_data": {
+        "domain": "https://www.eigencloud.xyz",
+        "logo_url": null,
+        "emails": [
+          "press@eigenlabs.org"
+        ],
+        "phones": [],
+        "social_links": {
+          "x": "https://x.com/eigenlayer",
+          "discord": "https://discord.gg/eigenlayer",
+          "github": "https://github.com/Layr-Labs",
+          "youtube": "https://www.youtube.com/@EigenLayer"
+        },
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 0,
+        "ceo_profiles": {},
+        "linkedin": "",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756113336,
+      "success": true,
+      "errors": [
+        "Error in CEO profile search: cannot switch to a different thread (which happens to have exited)"
+      ]
+    },
+    {
+      "company_domain": "https://celestia.org",
+      "company_name": "Celestia",
+      "company_website_data": {
+        "domain": "https://celestia.org",
+        "logo_url": "https://celestia.org/images/celestia-logo.svg",
+        "emails": [],
+        "phones": [],
+        "social_links": {
+          "x": "https://x.com/convergeonchain/status/1912853619038461967/",
+          "discord": "https://discord.com/invite/YsnTPcSfWQ",
+          "telegram": "https://t.me/CelestiaCommunity/",
+          "reddit": "https://www.reddit.com/r/CelestiaNetwork/",
+          "github": "https://github.com/celestiaorg/"
+        },
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 0,
+        "ceo_profiles": {},
+        "linkedin": "",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756113348,
+      "success": true,
+      "errors": [
+        "Error in CEO profile search: cannot switch to a different thread (which happens to have exited)"
+      ]
+    },
+    {
+      "company_domain": "https://ritual.net",
+      "company_name": "Ritual",
+      "company_website_data": {
+        "domain": "https://ritual.net",
+        "logo_url": null,
+        "emails": [
+          "hello@ritual.net"
+        ],
+        "phones": [],
+        "social_links": {
+          "x": "https://twitter.com/ritualnet",
+          "discord": "https://discord.com/invite/ritual-net",
+          "github": "https://github.com/ritual-net"
+        },
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 0,
+        "ceo_profiles": {},
+        "linkedin": "",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756113356,
+      "success": true,
+      "errors": [
+        "Error in CEO profile search: cannot switch to a different thread (which happens to have exited)"
+      ]
+    },
+    {
+      "company_domain": "https://berachain.com",
+      "company_name": "Berachain",
+      "company_website_data": {
+        "domain": "https://berachain.com",
+        "logo_url": null,
+        "emails": [],
+        "phones": [
+          "1756113365"
+        ],
+        "social_links": {},
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 0,
+        "ceo_profiles": {},
+        "linkedin": "",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756113362,
+      "success": true,
+      "errors": [
+        "Error in CEO profile search: cannot switch to a different thread (which happens to have exited)"
+      ]
+    },
+    {
+      "company_domain": "https://www.availproject.org",
+      "company_name": "Availproject",
+      "company_website_data": {
+        "domain": "https://www.availproject.org",
+        "logo_url": "https://www.availproject.org/_next/static/media/avail_logo.9c818c5a.png",
+        "emails": [],
+        "phones": [],
+        "social_links": {
+          "github": "https://github.com/availproject/nexus",
+          "discord": "https://discord.gg/AvailProject",
+          "x": "https://twitter.com/AvailProject",
+          "telegram": "https://t.me/AvailCommunity",
+          "linkedin": "https://www.linkedin.com/company/availproject/"
+        },
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 0,
+        "ceo_profiles": {},
+        "linkedin": "",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756113367,
+      "success": true,
+      "errors": [
+        "Error in CEO profile search: cannot switch to a different thread (which happens to have exited)"
+      ]
+    },
+    {
+      "company_domain": "https://www.succinct.xyz",
+      "company_name": "Succinct",
+      "company_website_data": {
+        "domain": "https://www.succinct.xyz",
+        "logo_url": null,
+        "emails": [],
+        "phones": [],
+        "social_links": {
+          "x": "https://x.com/succinctlabs",
+          "linkedin": "https://www.linkedin.com/company/succinctlabs/",
+          "discord": "https://discord.com/invite/succinctlabs"
+        },
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 0,
+        "ceo_profiles": {},
+        "linkedin": "",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756113379,
+      "success": true,
+      "errors": [
+        "Error in CEO profile search: cannot switch to a different thread (which happens to have exited)"
+      ]
+    },
+    {
+      "company_domain": "https://layerzero.network",
+      "company_name": "Layerzero",
+      "company_website_data": {
+        "domain": "https://layerzero.network",
+        "logo_url": null,
+        "emails": [],
+        "phones": [],
+        "social_links": {
+          "github": "https://github.com/LayerZero-Labs/LayerZero-v2",
+          "telegram": "https://t.me/joinchat/VcqxYkStIDsyN2Rh",
+          "discord": "https://discord.gg/ktbvm8Nkcr",
+          "x": "https://x.com/layerzero_core"
+        },
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 0,
+        "ceo_profiles": {},
+        "linkedin": "",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756113387,
+      "success": true,
+      "errors": [
+        "Error in CEO profile search: cannot switch to a different thread (which happens to have exited)"
+      ]
+    }
+  ],
+  "errors": []
+}
