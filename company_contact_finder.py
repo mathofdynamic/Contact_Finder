@@ -612,8 +612,7 @@ class CompanyContactFinder:
         # Use domain directly in search queries for better accuracy
         # e.g., "monad.xyz" CEO is more specific than "Monad" CEO
         search_queries = [
-            f'"{search_domain}" CEO site:twitter.com',
-            f'"{search_domain}" CEO site:x.com', 
+            f'"{search_domain}" CEO site:twitter.com OR site:x.com', 
             f'"{search_domain}" CEO site:linkedin.com/in/',
             f'"{search_domain}" CEO site:instagram.com',
             f'"{search_domain}" CEO site:tiktok.com'
@@ -647,7 +646,16 @@ class CompanyContactFinder:
                 if first_result_url and self.is_valid_ceo_profile_url(first_result_url):
                     platform = self.get_platform_from_url(first_result_url)
                     print(f"      ✅ Found CEO on {platform}: {first_result_url}")
-                    ceo_profiles.append(first_result_url)
+                    
+                    # Check if we already have a profile from this platform type
+                    platform_type = 'twitter' if 'twitter' in platform.lower() or 'x' in platform.lower() else platform.lower()
+                    
+                    # Avoid duplicates from the same platform type
+                    existing_platforms = [self.get_platform_type_from_url(url) for url in ceo_profiles]
+                    if platform_type not in existing_platforms:
+                        ceo_profiles.append(first_result_url)
+                    else:
+                        print(f"      ⚠️  Skipping duplicate {platform} profile")
                 else:
                     platform = self.get_platform_from_query(query)
                     print(f"      ❌ No valid CEO profile found on {platform} (first result not valid)")
@@ -813,7 +821,7 @@ class CompanyContactFinder:
                     return False
                 if path and len(path) > 1:  # Has actual username
                     username = path.strip('/').split('/')[0]  # Get first part after /
-                    if username and len(username) > 0 and not username.startswith('_'):
+                    if username and len(username) > 0:  # Allow usernames starting with underscore
                         print(f"      ✅ Valid Twitter/X profile format: /{username}")
                         return True
                 print(f"      ❌ Invalid Twitter/X username: {path}")
@@ -895,6 +903,18 @@ class CompanyContactFinder:
         except Exception as e:
             print(f"      ❌ Error validating URL {url}: {e}")
             return False
+    
+    def get_platform_type_from_url(self, url: str) -> str:
+        """Extract platform type from URL for duplicate checking"""
+        if "twitter.com" in url or "x.com" in url:
+            return "twitter"
+        elif "linkedin.com" in url:
+            return "linkedin"
+        elif "instagram.com" in url:
+            return "instagram"
+        elif "tiktok.com" in url:
+            return "tiktok"
+        return "unknown"
     
     def get_platform_from_url(self, url: str) -> str:
         """Extract platform name from URL"""

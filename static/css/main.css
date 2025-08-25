@@ -727,6 +727,189 @@ body {
     animation: modalSlideIn 0.3s ease-out;
 }
 
+/* Company Details Modal Specific Styles */
+.company-details-modal {
+    max-width: 800px;
+    max-height: 90vh;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-6);
+    border-bottom: var(--border-width) solid var(--gray-200);
+}
+
+.modal-header h3 {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    color: var(--gray-800);
+    margin: 0;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: var(--font-size-lg);
+    color: var(--gray-400);
+    cursor: pointer;
+    padding: var(--space-2);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.btn-close:hover {
+    color: var(--gray-600);
+    background: var(--gray-100);
+}
+
+.modal-body {
+    padding: var(--space-6);
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    border-top: var(--border-width) solid var(--gray-200);
+}
+
+/* Detail Sections */
+.detail-section {
+    margin-bottom: var(--space-8);
+}
+
+.detail-section:last-child {
+    margin-bottom: 0;
+}
+
+.detail-section h4 {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.detail-section h4 i {
+    color: var(--primary);
+}
+
+.detail-item {
+    margin-bottom: var(--space-3);
+    padding: var(--space-3);
+    background: var(--gray-50);
+    border-radius: var(--border-radius);
+    border-left: 3px solid var(--primary);
+}
+
+.detail-item strong {
+    color: var(--gray-700);
+    margin-right: var(--space-2);
+}
+
+/* Links Grid */
+.links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-3);
+}
+
+.link-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    background: var(--white);
+    border: var(--border-width) solid var(--gray-200);
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    color: var(--gray-700);
+    transition: var(--transition);
+    min-height: 50px;
+}
+
+.link-item:hover {
+    border-color: var(--primary);
+    background: var(--gray-50);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.link-item i {
+    color: var(--primary);
+    width: 20px;
+    text-align: center;
+}
+
+/* CEO Profile Links */
+.ceo-profiles {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+}
+
+.link-item.ceo-profile {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: var(--space-4);
+    min-height: 100px;
+}
+
+.profile-info {
+    width: 100%;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+}
+
+.platform-name {
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.profile-name {
+    font-weight: 500;
+    color: var(--gray-700);
+    margin-bottom: var(--space-1);
+}
+
+.profile-headline {
+    font-size: var(--font-size-sm);
+    color: var(--gray-500);
+    line-height: 1.4;
+}
+
+/* No Data Message */
+.no-data {
+    text-align: center;
+    padding: var(--space-8);
+}
+
+.no-data-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+    color: var(--gray-500);
+}
+
+.no-data-message i {
+    font-size: var(--font-size-3xl);
+    color: var(--gray-400);
+}
+
+.no-data-message p {
+    margin: 0;
+    font-size: var(--font-size-lg);
+}
+
 .modal-header {
     display: flex;
     align-items: center;
@@ -945,6 +1128,19 @@ body {
     
     .modal-content {
         margin: var(--space-4);
+    }
+    
+    .company-details-modal {
+        max-width: calc(100vw - 2rem);
+        margin: var(--space-2);
+    }
+    
+    .links-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .ceo-profiles {
+        grid-template-columns: 1fr;
     }
     
     .toast-container {

@@ -447,7 +447,7 @@ class ContactFinderApp {
             </td>
             <td>
                 <span class="badge badge-info">${ceoProfilesCount} CEO profiles</span>
-                ${data.status === 'success' ? '<button class="btn btn-sm btn-outline ml-2" onclick="app.viewDetails(\'' + data.company + '\')" title="View Details"><i class="fas fa-eye"></i></button>' : ''}
+                ${data.status === 'success' ? '<button class="btn btn-sm btn-outline ml-2" onclick="app.viewDetails(\'' + (result.company_domain || data.company) + '\')" title="View Details"><i class="fas fa-eye"></i></button>' : ''}
             </td>
         `;
 
@@ -636,10 +636,205 @@ class ContactFinderApp {
     }
 
     /**
-     * View detailed results for a company (placeholder for future implementation)
+     * View detailed results for a company
      */
-    viewDetails(company) {
-        this.showToast(`Detailed view for ${company} - Feature coming soon!`, 'info');
+    async viewDetails(companyIdentifier) {
+        if (!this.currentSessionId) {
+            this.showToast('No session found', 'error');
+            return;
+        }
+        
+        try {
+            // Extract domain from URL if it's a full URL
+            let searchTerm = companyIdentifier;
+            if (companyIdentifier.includes('://')) {
+                const url = new URL(companyIdentifier);
+                searchTerm = url.hostname.replace('www.', '');
+            }
+            
+            this.showLoadingOverlay(true, `Loading details for ${searchTerm}...`);
+            
+            const response = await fetch(`/company_details/${this.currentSessionId}/${searchTerm}`);
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showCompanyDetailsModal(result);
+            } else {
+                throw new Error(result.error || 'Failed to load company details');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error loading company details:', error);
+            this.showToast(`Failed to load details: ${error.message}`, 'error');
+        } finally {
+            this.showLoadingOverlay(false);
+        }
+    }
+    
+    /**
+     * Show company details in a modal
+     */
+    showCompanyDetailsModal(companyData) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'companyDetailsModal';
+        
+        const details = companyData.details;
+        
+        // Build content sections
+        let contentSections = [];
+        
+        // Company Info Section
+        contentSections.push(`
+            <div class="detail-section">
+                <h4><i class="fas fa-building"></i> Company Information</h4>
+                <div class="detail-item">
+                    <strong>Company:</strong> ${companyData.company_name}
+                </div>
+                <div class="detail-item">
+                    <strong>Website:</strong> <a href="${companyData.company_domain}" target="_blank" rel="noopener">${companyData.company_domain}</a>
+                </div>
+                <div class="detail-item">
+                    <strong>Processed:</strong> ${companyData.timestamp}
+                </div>
+                <div class="detail-item">
+                    <strong>Status:</strong> <span class="status-badge ${companyData.processing_status.toLowerCase()}">${companyData.processing_status}</span>
+                </div>
+            </div>
+        `);
+        
+        // Emails Section
+        if (details.emails && details.emails.length > 0) {
+            const emailLinks = details.emails.map(email => 
+                `<a href="mailto:${email}" target="_blank" rel="noopener" class="link-item"><i class="fas fa-envelope"></i> ${email}</a>`
+            ).join('');
+            contentSections.push(`
+                <div class="detail-section">
+                    <h4><i class="fas fa-envelope"></i> Email Addresses (${details.emails.length})</h4>
+                    <div class="links-grid">${emailLinks}</div>
+                </div>
+            `);
+        }
+        
+        // Phone Numbers Section
+        if (details.phones && details.phones.length > 0) {
+            const phoneLinks = details.phones.map(phone => 
+                `<a href="tel:${phone}" target="_blank" rel="noopener" class="link-item"><i class="fas fa-phone"></i> ${phone}</a>`
+            ).join('');
+            contentSections.push(`
+                <div class="detail-section">
+                    <h4><i class="fas fa-phone"></i> Phone Numbers (${details.phones.length})</h4>
+                    <div class="links-grid">${phoneLinks}</div>
+                </div>
+            `);
+        }
+        
+        // Website Social Links Section
+        if (details.website_social_links && Object.keys(details.website_social_links).length > 0) {
+            const socialLinks = Object.entries(details.website_social_links).map(([platform, url]) => {
+                const icon = this.getSocialIcon(platform);
+                return `<a href="${url}" target="_blank" rel="noopener" class="link-item"><i class="${icon}"></i> ${platform.charAt(0).toUpperCase() + platform.slice(1)}</a>`;
+            }).join('');
+            contentSections.push(`
+                <div class="detail-section">
+                    <h4><i class="fas fa-share-alt"></i> Website Social Links (${Object.keys(details.website_social_links).length})</h4>
+                    <div class="links-grid">${socialLinks}</div>
+                </div>
+            `);
+        }
+        
+        // CEO Profiles Section
+        if (details.ceo_profiles && Object.keys(details.ceo_profiles).length > 0) {
+            const ceoLinks = Object.entries(details.ceo_profiles).map(([platform, profileData]) => {
+                const icon = this.getSocialIcon(platform);
+                const name = profileData.name || 'CEO Profile';
+                const headline = profileData.headline || 'Profile found via Google search';
+                return `
+                    <a href="${profileData.url}" target="_blank" rel="noopener" class="link-item ceo-profile">
+                        <div class="profile-info">
+                            <div class="profile-header">
+                                <i class="${icon}"></i>
+                                <span class="platform-name">${platform.charAt(0).toUpperCase() + platform.slice(1)}</span>
+                            </div>
+                            <div class="profile-name">${name}</div>
+                            <div class="profile-headline">${headline}</div>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+            contentSections.push(`
+                <div class="detail-section">
+                    <h4><i class="fas fa-user-tie"></i> CEO Profiles (${Object.keys(details.ceo_profiles).length})</h4>
+                    <div class="links-grid ceo-profiles">${ceoLinks}</div>
+                </div>
+            `);
+        }
+        
+        // No data found message
+        if (contentSections.length === 1) { // Only company info section
+            contentSections.push(`
+                <div class="detail-section no-data">
+                    <div class="no-data-message">
+                        <i class="fas fa-info-circle"></i>
+                        <p>No contact information or CEO profiles were found for this company.</p>
+                    </div>
+                </div>
+            `);
+        }
+        
+        modal.innerHTML = `
+            <div class="modal-content company-details-modal">
+                <div class="modal-header">
+                    <h3><i class="fas fa-info-circle"></i> Company Details</h3>
+                    <button onclick="this.closest('.modal').remove()" class="btn-close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    ${contentSections.join('')}
+                </div>
+                <div class="modal-footer">
+                    <button onclick="this.closest('.modal').remove()" class="btn btn-outline">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+    }
+    
+    /**
+     * Get appropriate icon for social platform
+     */
+    getSocialIcon(platform) {
+        const iconMap = {
+            'linkedin': 'fab fa-linkedin',
+            'twitter': 'fab fa-twitter',
+            'x': 'fab fa-x-twitter',
+            'instagram': 'fab fa-instagram',
+            'facebook': 'fab fa-facebook',
+            'tiktok': 'fab fa-tiktok',
+            'youtube': 'fab fa-youtube',
+            'github': 'fab fa-github',
+            'medium': 'fab fa-medium',
+            'telegram': 'fab fa-telegram',
+            'discord': 'fab fa-discord',
+            'snapchat': 'fab fa-snapchat',
+            'pinterest': 'fab fa-pinterest',
+            'reddit': 'fab fa-reddit',
+            'tumblr': 'fab fa-tumblr',
+            'whatsapp': 'fab fa-whatsapp'
+        };
+        
+        return iconMap[platform.toLowerCase()] || 'fas fa-link';
     }
 }
 

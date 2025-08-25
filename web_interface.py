@@ -146,16 +146,46 @@ class ProcessingSession:
                     company_data = result.get('company_website_data', {})
                     ceo_data = result.get('ceo_data', {})
                     
+                    # Extract CEO profiles with proper handling for Twitter/X
+                    ceo_profiles = ceo_data.get('ceo_profiles', {})
+                    linkedin_url = ''
+                    twitter_url = ''
+                    instagram_url = ''
+                    tiktok_url = ''
+                    
+                    # Extract URLs from ceo_profiles
+                    for platform, profile_data in ceo_profiles.items():
+                        if isinstance(profile_data, dict) and profile_data.get('url'):
+                            if 'linkedin' in platform:
+                                linkedin_url = profile_data['url']
+                            elif 'twitter' in platform or 'x' in platform:
+                                if not twitter_url:  # Only take the first Twitter/X URL found
+                                    twitter_url = profile_data['url']
+                            elif 'instagram' in platform:
+                                instagram_url = profile_data['url']
+                            elif 'tiktok' in platform:
+                                tiktok_url = profile_data['url']
+                    
+                    # Fallback to direct keys if profiles not found
+                    if not linkedin_url:
+                        linkedin_url = ceo_data.get('linkedin', '')
+                    if not twitter_url:
+                        twitter_url = ceo_data.get('twitter', '') or ceo_data.get('x', '')
+                    if not instagram_url:
+                        instagram_url = ceo_data.get('instagram', '')
+                    if not tiktok_url:
+                        tiktok_url = ceo_data.get('tiktok', '')
+                    
                     row = [
                         result.get('company_domain', ''),
                         result.get('company_name', ''),
                         '; '.join(company_data.get('emails', [])),
                         '; '.join(company_data.get('phones', [])),
                         self._format_social_links(company_data.get('socialLinks', {})),
-                        ceo_data.get('linkedin', ''),
-                        ceo_data.get('twitter', ''),
-                        ceo_data.get('instagram', ''),
-                        ceo_data.get('tiktok', ''),
+                        linkedin_url,
+                        twitter_url,
+                        instagram_url,
+                        tiktok_url,
                         'Success' if result.get('success') else 'Failed',
                         datetime.fromtimestamp(result.get('timestamp', time.time())).strftime('%Y-%m-%d %H:%M:%S')
                     ]
@@ -554,6 +584,15 @@ def process_companies_background(session_id):
             # Final CSV export
             session.export_to_csv()
             
+            # Send final progress update to ensure 100% completion
+            socketio.emit('progress_update', {
+                'session_id': session_id,
+                'current_company': 'Processing Complete!',
+                'processed': session.total_companies,
+                'total': session.total_companies,
+                'percentage': 100
+            })
+            
             socketio.emit('processing_complete', {
                 'session_id': session_id,
                 'total_processed': session.processed_companies,
@@ -679,6 +718,104 @@ def session_status(session_id):
         
     except Exception as e:
         return jsonify({'error': f'Error getting session status: {str(e)}'}), 500
+
+@app.route('/company_details/<session_id>/<path:company_domain>')
+def get_company_details(session_id, company_domain):
+    """Get detailed information for a specific company by domain"""
+    try:
+        # Decode URL-encoded domain
+        from urllib.parse import unquote
+        company_domain = unquote(company_domain)
+        
+        with session_lock:
+            session = processing_sessions.get(session_id)
+        
+        if not session:
+            return jsonify({'error': 'Session not found'}), 404
+        
+        # Find the company result by domain (more reliable than name)
+        company_result = None
+        print(f"Debug: Looking for company with domain containing: '{company_domain}'")
+        
+        # Clean the search domain for better matching
+        search_domain = company_domain.replace('https://', '').replace('http://', '').replace('www.', '').lower()
+        
+        for i, result in enumerate(session.results):
+            result_domain = result.get('company_domain', '')
+            result_name = result.get('company_name', '')
+            
+            # Clean the result domain for comparison
+            clean_result_domain = result_domain.replace('https://', '').replace('http://', '').replace('www.', '').lower()
+            
+            print(f"Debug: Checking result {i}: domain='{result_domain}', clean_domain='{clean_result_domain}', name='{result_name}'")
+            
+            # Handle different domain formats - be more flexible
+            domain_matches = (
+                search_domain in clean_result_domain or 
+                clean_result_domain in search_domain or
+                search_domain == clean_result_domain or
+                company_domain.lower() in result_domain.lower() or
+                result_domain.lower().endswith(search_domain)
+            )
+            
+            if domain_matches:
+                company_result = result
+                print(f"Debug: Found matching company: {result_name}")
+                break
+        
+        if not company_result:
+            # Fallback: try to match by company name if domain matching failed
+            print(f"Debug: Domain matching failed, trying to match by name: '{company_domain}'")
+            for i, result in enumerate(session.results):
+                result_name = result.get('company_name', '').lower()
+                if company_domain.lower() in result_name or result_name in company_domain.lower():
+                    company_result = result
+                    print(f"Debug: Found matching company by name: {result.get('company_name')}")
+                    break
+        
+        if not company_result:
+            # Debug: List available companies for troubleshooting
+            available_companies = [f"{r.get('company_name', 'N/A')} ({r.get('company_domain', 'N/A')})" for r in session.results]
+            print(f"Debug: Company '{company_domain}' not found. Available companies: {available_companies}")
+            return jsonify({
+                'error': f'Company not found for domain: {company_domain}',
+                'available_companies': available_companies
+            }), 404
+        
+        # Format detailed response
+        company_data = company_result.get('company_website_data', {})
+        ceo_data = company_result.get('ceo_data', {})
+        ceo_profiles = ceo_data.get('ceo_profiles', {})
+        
+        # Collect all found links
+        all_links = {
+            'emails': company_data.get('emails', []),
+            'phones': company_data.get('phones', []),
+            'website_social_links': company_data.get('socialLinks', {}),
+            'ceo_profiles': {}
+        }
+        
+        # Process CEO profiles
+        for platform, profile_data in ceo_profiles.items():
+            if isinstance(profile_data, dict) and profile_data.get('url'):
+                all_links['ceo_profiles'][platform] = {
+                    'url': profile_data['url'],
+                    'name': profile_data.get('name', 'CEO Profile'),
+                    'headline': profile_data.get('headline', 'Profile found via Google search')
+                }
+        
+        return jsonify({
+            'success': True,
+            'company_name': company_result.get('company_name', ''),
+            'company_domain': company_result.get('company_domain', ''),
+            'timestamp': datetime.fromtimestamp(company_result.get('timestamp', time.time())).strftime('%Y-%m-%d %H:%M:%S'),
+            'processing_status': 'Success' if company_result.get('success') else 'Failed',
+            'details': all_links,
+            'errors': company_result.get('errors', [])
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Error getting company details: {str(e)}'}), 500
 
 @app.route('/download_results/<session_id>')
 def download_results(session_id):
