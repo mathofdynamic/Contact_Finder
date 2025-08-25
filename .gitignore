@@ -13,7 +13,6 @@ __pycache__/
 
 # Generated reports and data
 contact_finder_reports/
-Screenshots/
 
 # Cookie files (sensitive data)
 *_cookies.json
