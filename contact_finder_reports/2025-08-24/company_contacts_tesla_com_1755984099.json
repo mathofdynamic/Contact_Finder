@@ -1,0 +1,34 @@
+{
+  "company_domain": "tesla.com",
+  "company_name": "Tesla",
+  "company_website_data": {
+    "domain": "https://tesla.com",
+    "logo_url": null,
+    "emails": [],
+    "phones": [],
+    "social_links": {},
+    "success": true
+  },
+  "ceo_data": {
+    "search_method": "first_result_validation",
+    "platforms_searched": [
+      "Twitter/X",
+      "LinkedIn",
+      "Instagram",
+      "TikTok"
+    ],
+    "profiles_found": 1,
+    "ceo_profiles": {
+      "linkedin": {
+        "url": "https://fr.linkedin.com/in/mathieu-lenglin-72284ab2",
+        "name": "",
+        "headline": "",
+        "found": false,
+        "error": null
+      }
+    }
+  },
+  "timestamp": 1755984003,
+  "success": true,
+  "errors": []
+}

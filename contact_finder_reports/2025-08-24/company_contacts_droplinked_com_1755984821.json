@@ -1,0 +1,44 @@
+{
+  "company_domain": "droplinked.com",
+  "company_name": "Droplinked",
+  "company_website_data": {
+    "domain": "https://droplinked.com",
+    "logo_url": null,
+    "emails": [
+      "support@droplinked.com"
+    ],
+    "phones": [],
+    "social_links": {
+      "telegram": "https://t.me/droplinked",
+      "discord": "https://discord.com/channels/1068939465025916959/1088500920406515763",
+      "x": "https://x.com/droplinked",
+      "instagram": "https://www.instagram.com/drop_linked",
+      "linkedin": "https://www.linkedin.com/company/droplinked",
+      "youtube": "https://youtube.com/@droplinked-fj6nt?si=DzYuLrPc2z37_xed",
+      "tiktok": "https://www.tiktok.com/@droplinked"
+    },
+    "success": true
+  },
+  "ceo_data": {
+    "search_method": "first_result_validation",
+    "platforms_searched": [
+      "Twitter/X",
+      "LinkedIn",
+      "Instagram",
+      "TikTok"
+    ],
+    "profiles_found": 1,
+    "ceo_profiles": {
+      "linkedin": {
+        "url": "https://www.linkedin.com/in/alisammour",
+        "name": "ali sammour",
+        "headline": "",
+        "found": true,
+        "error": null
+      }
+    }
+  },
+  "timestamp": 1755984724,
+  "success": true,
+  "errors": []
+}

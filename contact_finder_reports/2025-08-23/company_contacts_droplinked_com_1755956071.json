@@ -1,0 +1,65 @@
+{
+  "company_domain": "droplinked.com",
+  "company_name": "Droplinked",
+  "company_website_data": {
+    "domain": "https://droplinked.com",
+    "logo_url": null,
+    "emails": [
+      "support@droplinked.com"
+    ],
+    "phones": [],
+    "social_links": {
+      "telegram": "https://t.me/droplinked",
+      "discord": "https://discord.com/channels/1068939465025916959/1088500920406515763",
+      "x": "https://x.com/droplinked",
+      "instagram": "https://www.instagram.com/drop_linked",
+      "linkedin": "https://www.linkedin.com/company/droplinked",
+      "youtube": "https://youtube.com/@droplinked-fj6nt?si=DzYuLrPc2z37_xed",
+      "tiktok": "https://www.tiktok.com/@droplinked"
+    },
+    "success": true
+  },
+  "ceo_data": {
+    "profiles_found": 5,
+    "profiles": [
+      {
+        "url": "https://twitter.com/web3verse_",
+        "platform": "twitter",
+        "name": "",
+        "headline": "",
+        "error": null
+      },
+      {
+        "url": "https://twitter.com/AlbusProtocol",
+        "platform": "twitter",
+        "name": "Albus Protocol",
+        "headline": "A digital platform that streamlines customer verification, ensuring compliance with digital regulations (KYC, AML, GDPR, CBDC)",
+        "error": null
+      },
+      {
+        "url": "https://twitter.com/salvadiro",
+        "platform": "twitter",
+        "name": "Salvadiro",
+        "headline": "If you're afraid - don't do it, - if you're doing it - don't be afraid",
+        "error": null
+      },
+      {
+        "url": "https://twitter.com/antonpalagutin",
+        "platform": "twitter",
+        "name": "Anton Palagutin",
+        "headline": "I build marketing tools to help busy founders reclaim time and save thousands of dollars on marketing strategy and content.\n\nFounder \n@gosoloai\n.\n\nSign up now",
+        "error": null
+      },
+      {
+        "url": "https://twitter.com/TssCactus",
+        "platform": "twitter",
+        "name": "Sir Cactus",
+        "headline": "I'm Sir Cactus, leader of Hyperia and  Commander of The Sneakerheadz, loyal to king Swag and fearless adversary of the Yops.\nFollow me on Phantom \n@SirCactus",
+        "error": null
+      }
+    ]
+  },
+  "timestamp": 1755955988,
+  "success": true,
+  "errors": []
+}
