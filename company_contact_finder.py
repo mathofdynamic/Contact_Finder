@@ -39,6 +39,18 @@ from bs4 import BeautifulSoup
 # Playwright imports (for CEO search)
 from playwright.sync_api import sync_playwright, Page, BrowserContext
 
+# Gemini imports (for AI-powered CEO search with Google Search tool)
+try:
+    from google import genai
+    from google.genai import types
+    GOOGLE_SEARCH_AVAILABLE = True
+except ImportError:
+    # Fallback to old google-generativeai if google-genai not available
+    import google.generativeai as genai
+    types = None  # Set to None when not available
+    GOOGLE_SEARCH_AVAILABLE = False
+    print("⚠️ google-genai not available, falling back to basic Gemini without search")
+
 # Load environment variables
 load_dotenv()
 
@@ -107,6 +119,10 @@ class CompanyContactFinder:
         self.context = None
         self.page = None
         self.playwright_instance = None
+        
+        # Gemini model/client for AI-powered CEO search
+        self.gemini_model = None
+        self.gemini_client = None  # New client for google-genai package
         
         self.results = {
             "company_domain": None,
@@ -581,6 +597,194 @@ class CompanyContactFinder:
                 return False
         
         return True
+
+    def initialize_gemini(self):
+        """Initializes the Gemini model/client with Google Search capabilities if available."""
+        if self.gemini_model or self.gemini_client:
+            return True
+        
+        print("🚀 Initializing Gemini with enhanced search capabilities...")
+        try:
+            api_key = os.getenv("GEMINI_API_KEY")
+            if not api_key:
+                print("🔴 Error: GEMINI_API_KEY not found in .env file.")
+                self.results["errors"].append("GEMINI_API_KEY not set.")
+                return False
+            
+            if GOOGLE_SEARCH_AVAILABLE:
+                # Use new google-genai package with Google Search tool
+                print("🔍 Using Google Search-enhanced Gemini...")
+                self.gemini_client = genai.Client(api_key=api_key)  # type: ignore
+                print("✅ Gemini client with Google Search initialized successfully.")
+            else:
+                # Fallback to basic google-generativeai
+                print("⚠️ Using basic Gemini without real-time search...")
+                genai.configure(api_key=api_key)  # type: ignore
+                self.gemini_model = genai.GenerativeModel('gemini-1.5-flash')  # type: ignore
+                print("✅ Basic Gemini model initialized successfully.")
+            
+            return True
+        except Exception as e:
+            error_msg = f"🔴 Error initializing Gemini: {e}"
+            print(error_msg)
+            self.results["errors"].append(error_msg)
+            return False
+
+    def find_ceo_with_gemini(self, company_domain: str) -> dict:
+        """Uses Gemini with Google Search tool to find the CEO/founder and their profiles."""
+        if not self.gemini_model and not self.gemini_client:
+            print("⚠️ Gemini not initialized. Skipping search.")
+            return {"error": "Gemini not initialized."}
+
+        print(f"🤖 Querying Gemini with real-time search for CEO of '{company_domain}'...")
+        
+        if self.gemini_client and GOOGLE_SEARCH_AVAILABLE:
+            return self._find_ceo_with_search_tool(company_domain)
+        else:
+            return self._find_ceo_with_basic_gemini(company_domain)
+    
+    def _find_ceo_with_search_tool(self, company_domain: str) -> dict:
+        """Use Google Search tool for real-time CEO discovery."""
+        if not types:  # Check if types is available
+            return self._find_ceo_with_basic_gemini(company_domain)
+        
+        search_query = f"""
+Search Google for the current CEO or founder of the company with domain "{company_domain}".
+
+Find:
+1. CEO/Founder full name
+2. Their exact title
+3. LinkedIn profile URL
+4. Twitter/X profile URL  
+5. Company name
+
+Return the information in this JSON format:
+{{
+  "company_name": "Official company name",
+  "ceo_name": "Full name",
+  "title": "Exact title (e.g. 'CEO', 'Co-Founder & CEO')",
+  "linkedin_url": "LinkedIn profile URL or empty string",
+  "twitter_url": "Twitter/X profile URL or empty string",
+  "search_confidence": "high/medium/low based on search results"
+}}
+        """
+        
+        response_text = ""  # Initialize response_text outside try block
+        try:
+            # Set up content for search
+            contents = [
+                types.Content(  # type: ignore
+                    role="user",
+                    parts=[types.Part.from_text(text=search_query)],  # type: ignore
+                ),
+            ]
+            
+            # Configure tools with Google Search
+            tools = [
+                types.Tool(googleSearch=types.GoogleSearch()),  # type: ignore
+            ]
+            
+            generate_content_config = types.GenerateContentConfig(  # type: ignore
+                tools=tools,
+                temperature=0.1,  # Low temperature for consistent results
+            )
+            
+            print(f"   🔍 Performing real-time Google search for {company_domain}...")
+            
+            # Generate response with streaming
+            for chunk in self.gemini_client.models.generate_content_stream(  # type: ignore
+                model="gemini-2.0-flash",  # Model that supports search tools
+                contents=contents,  # type: ignore
+                config=generate_content_config,
+            ):
+                if chunk.text:
+                    response_text += chunk.text
+            
+            # Parse JSON from response
+            if "{" in response_text and "}" in response_text:
+                start = response_text.find("{")
+                end = response_text.rfind("}") + 1
+                json_part = response_text[start:end]
+                
+                data = json.loads(json_part)
+                
+                # Validate required fields
+                if "error" in data:
+                    print(f" G-🔍 ❌ Search failed: {data['error']}")
+                    return data
+                
+                # Convert to expected format
+                result = {
+                    "company_name": data.get("company_name", ""),
+                    "full_name": data.get("ceo_name", ""),
+                    "title": data.get("title", ""),
+                    "linkedin_url": data.get("linkedin_url", ""),
+                    "twitter_url": data.get("twitter_url", ""),
+                    "search_confidence": data.get("search_confidence", "medium")
+                }
+                
+                print(f" G-🔍 ✅ Found: {result.get('full_name')} ({result.get('title')}) - Confidence: {result.get('search_confidence')}")
+                return result
+            else:
+                print(f" G-🔍 ❌ No JSON found in response")
+                return {"error": "No structured data in search response", "raw_response": response_text[:200]}
+            
+        except json.JSONDecodeError as json_error:
+            error_msg = "Failed to decode search response JSON."
+            print(f" G-🔍 ❌ {error_msg}")
+            return {"error": error_msg, "raw_response": response_text[:200] if response_text else "No response"}
+        except Exception as e:
+            error_msg = f"Search query error: {e}"
+            print(f" G-🔍 ❌ {error_msg}")
+            return {"error": error_msg}
+    
+    def _find_ceo_with_basic_gemini(self, company_domain: str) -> dict:
+        """Fallback to basic Gemini without real-time search (legacy method)."""
+        if not self.gemini_model:
+            return {"error": "Basic Gemini model not available"}
+        
+        prompt = f"""
+        Based on the latest, publicly available information from Google Search, identify the primary leader (CEO, Founder, or President) of the company associated with the domain "{company_domain}".
+
+        Provide the following information in a strict JSON format:
+        {{
+          "company_name": "The official name of the company",
+          "full_name": "The full name of the leader",
+          "title": "Their primary title (e.g., 'CEO', 'Co-Founder & CEO')",
+          "linkedin_url": "Their direct LinkedIn profile URL. If not found, use an empty string."
+        }}
+
+        If you cannot confidently identify the leader, return a JSON object with an "error" key.
+        Example of error response: "error": "Could not identify a primary leader for the specified domain."
+        """
+        
+        response = None  # Initialize response variable
+        try:
+            response = self.gemini_model.generate_content(prompt)  # type: ignore
+            
+            # Clean the response to extract only the JSON part
+            cleaned_text = response.text.strip().replace("```json", "").replace("```", "")
+            
+            # Parse the JSON string into a Python dictionary
+            data = json.loads(cleaned_text)
+            
+            if "error" in data:
+                print(f" G- ❌ Gemini search failed: {data['error']}")
+                return data
+            
+            print(f" G- ✅ Gemini found: {data.get('full_name')} ({data.get('title')})")
+            return data
+            
+        except json.JSONDecodeError as json_error:
+            error_msg = "Failed to decode Gemini's JSON response."
+            print(f" G- ❌ {error_msg}")
+            # Safely access response variable - it's guaranteed to be defined here
+            raw_response = response.text if response and hasattr(response, 'text') else "No response available"
+            return {"error": error_msg, "raw_response": raw_response}
+        except Exception as e:
+            error_msg = f"An error occurred during Gemini query: {e}"
+            print(f" G- ❌ {error_msg}")
+            return {"error": error_msg}
 
     def search_ceo_profiles(self, search_domain: str, page: Page) -> list:
         """Search Google for CEO profiles using domain - first result validation approach"""
@@ -1496,68 +1700,131 @@ class CompanyContactFinder:
             print(f"🔍 Search Term: {self.search_term}")
             
             # Step 2: Find CEO profiles using Google search
-            print(f"\n👤 STEP 1: Searching for CEO profiles...")
+            print(f"\n👤 STEP 1: Searching for CEO profiles (Gemini-first approach)...")
             ceo_profiles_data = []
-            
-            try:
-                # Initialize persistent browser if needed
-                self.ensure_browser_ready()
+            successful_ceo_finds = 0
+
+            # Initialize and use Gemini
+            gemini_confidence = "medium"  # Default confidence
+            if self.initialize_gemini():
+                gemini_result = self.find_ceo_with_gemini(self.search_term)
                 
-                # Ensure we have a valid page (don't close existing page unnecessarily)
-                page_valid = self.page and not getattr(self.page, '_closed', True)
-                if not page_valid:
-                    if self.context:
-                        self.page = self.context.new_page()
-                    else:
-                        raise Exception("No browser context available - browser initialization failed")
-                
-                print(f"🌐 Using persistent browser session (no restart needed)")
-                
-                # Search for CEO profiles using the domain directly
-                if not self.page:
-                    raise Exception("No page available for CEO search")
+                if "error" not in gemini_result and gemini_result.get("full_name"):
+                    # Extract confidence and fix empty string issue
+                    gemini_confidence = gemini_result.get("search_confidence", "medium")
+                    linkedin_url = gemini_result.get("linkedin_url", "")
                     
-                profile_urls = self.search_ceo_profiles(self.search_term, self.page)
-                
-                # Enhanced logging for found profiles
-                if profile_urls:
-                    print(f"✅ Found {len(profile_urls)} CEO profile(s):")
-                    for i, url in enumerate(profile_urls, 1):
-                        platform = self.get_platform_from_url(url)
-                        print(f"   {i}. {platform}: {url}")
-                else:
-                    print(f"❌ No CEO profiles found")
-                
-                # Check if CEO search was skipped due to captcha
-                if not profile_urls and self.skip_ceo_on_captcha:
-                    print("⏭️  CEO search was skipped due to captcha detection")
-                    self.results["errors"].append("CEO search skipped due to captcha challenge")
-                
-                # Just collect profile URLs - no need to scrape them individually
-                ceo_profiles_data = []
-                for i, profile_url in enumerate(profile_urls, 1):
+                    # Fix 'empty string' literal issue - convert to actual empty string
+                    if linkedin_url and linkedin_url.strip().lower() == "empty string":
+                        linkedin_url = ""
+                    
+                    # Gemini succeeded, so we format its data
+                    profile = {
+                        "url": linkedin_url,
+                        "platform": "linkedin",
+                        "name": gemini_result.get("full_name"),
+                        "headline": gemini_result.get("title"),
+                        "found": True,
+                        "error": None
+                    }
+                    ceo_profiles_data.append(profile)
+                    
+                    # Also handle Twitter/X URL if provided
+                    twitter_url = gemini_result.get("twitter_url", "")
+                    if twitter_url and twitter_url.strip().lower() != "empty string":
+                        twitter_profile = {
+                            "url": twitter_url,
+                            "platform": "twitter",
+                            "name": gemini_result.get("full_name"),
+                            "headline": gemini_result.get("title"),
+                            "found": True,
+                            "error": None
+                        }
+                        ceo_profiles_data.append(twitter_profile)
+                    
+            # Fallback or hybrid approach - always try browser search for better social media discovery
+            browser_profiles_found = []
+            if not ceo_profiles_data or len(ceo_profiles_data) < 2:  # If AI didn't find multiple platforms
+                print(" 🔄 Enhancing results with browser search for better social media discovery...")
+                try:
+                    # Initialize persistent browser if needed
+                    self.ensure_browser_ready()
+                    
+                    # Ensure we have a valid page (don't close existing page unnecessarily)
+                    page_valid = self.page and not getattr(self.page, '_closed', True)
+                    if not page_valid:
+                        if self.context:
+                            self.page = self.context.new_page()
+                        else:
+                            raise Exception("No browser context available - browser initialization failed")
+                    
+                    print(f"🌐 Using persistent browser session (no restart needed)")
+                    
+                    # Search for CEO profiles using the domain directly
+                    if not self.page:
+                        raise Exception("No page available for CEO search")
+                        
+                    profile_urls = self.search_ceo_profiles(self.search_term, self.page)
+                    
+                    # Enhanced logging for found profiles
+                    if profile_urls:
+                        print(f"✅ Browser search found {len(profile_urls)} additional CEO profile(s):")
+                        for i, url in enumerate(profile_urls, 1):
+                            platform = self.get_platform_from_url(url)
+                            print(f"   {i}. {platform}: {url}")
+                    else:
+                        print(f"❌ Browser search found no additional CEO profiles")
+                    
+                    # Check if CEO search was skipped due to captcha
+                    if not profile_urls and self.skip_ceo_on_captcha:
+                        print("⏭️  Browser CEO search was skipped due to captcha detection")
+                        self.results["errors"].append("Browser CEO search skipped due to captcha challenge")
+                    
+                    # Collect browser-found profile URLs
+                    browser_profiles_found = profile_urls
+                    
+                except Exception as e:
+                    error_msg = f"Error in browser CEO profile search: {e}"
+                    print(f"❌ {error_msg}")
+                    self.results["errors"].append(error_msg)
+            
+            # Merge AI and browser results - avoid duplicates
+            existing_urls = {profile.get("url", "").lower() for profile in ceo_profiles_data if profile.get("url")}
+            
+            # Add browser-found profiles that aren't already found by AI
+            for i, profile_url in enumerate(browser_profiles_found, 1):
+                if profile_url.lower() not in existing_urls:
                     platform = self.get_platform_from_url(profile_url)
                     
-                    # Just store the URL and platform - no scraping needed
+                    # Store the URL and platform
                     profile_data = {
                         "url": profile_url,
                         "platform": platform.lower().replace("/", "_"),
-                        "name": f"CEO Profile {i}",  # Generic name since we're not scraping
-                        "headline": "Profile found via Google search",
+                        "name": f"CEO Profile {len(ceo_profiles_data) + i}",  # Unique name
+                        "headline": "Profile found via browser search",
                         "found": True,
                         "error": None
                     }
                     ceo_profiles_data.append(profile_data)
-                
-            except Exception as e:
-                error_msg = f"Error in CEO profile search: {e}"
-                print(f"❌ {error_msg}")
-                self.results["errors"].append(error_msg)
-                ceo_profiles_data = []
+                    existing_urls.add(profile_url.lower())
+                    print(f"   ➕ Added browser-found profile: {platform} - {profile_url}")
             
-            # Organize CEO data by platform
+            # Update search method to reflect hybrid approach if both were used
+            used_ai = any(profile.get("name") and "CEO Profile" not in profile.get("name", "") for profile in ceo_profiles_data)
+            used_browser = any("browser search" in profile.get("headline", "") for profile in ceo_profiles_data)
+            
+            if used_ai and used_browser:
+                search_method = "hybrid_ai_browser"
+                print(f"🔄 Using hybrid approach: AI + Browser search")
+            elif used_ai:
+                search_method = "gemini"
+            else:
+                search_method = "first_result_validation"
+
+            # Organize the final CEO data
             ceo_data = {
-                "search_method": "first_result_validation",
+                "search_method": search_method,  # Use the determined search method
+                "search_confidence": gemini_confidence,  # Add confidence data
                 "platforms_searched": ["Twitter/X", "LinkedIn", "Instagram", "TikTok"],
                 "profiles_found": len(ceo_profiles_data),
                 "ceo_profiles": {}
@@ -1574,18 +1841,22 @@ class CompanyContactFinder:
                     "error": profile.get("error")
                 }
             
-            # Add direct platform links for web interface
-            ceo_data["linkedin"] = ceo_data["ceo_profiles"].get("linkedin", {}).get("url", "")
-            ceo_data["twitter"] = ceo_data["ceo_profiles"].get("twitter", {}).get("url", "")
-            ceo_data["x"] = ceo_data["ceo_profiles"].get("x", {}).get("url", "")
-            ceo_data["instagram"] = ceo_data["ceo_profiles"].get("instagram", {}).get("url", "")
-            ceo_data["tiktok"] = ceo_data["ceo_profiles"].get("tiktok", {}).get("url", "")
+            # Add direct platform links for web interface (filter out 'empty string' literals)
+            def clean_url(url):
+                """Clean URL by removing 'empty string' literals"""
+                if not url or url.strip().lower() == "empty string":
+                    return ""
+                return url
+            
+            ceo_data["linkedin"] = clean_url(ceo_data["ceo_profiles"].get("linkedin", {}).get("url", ""))
+            ceo_data["twitter"] = clean_url(ceo_data["ceo_profiles"].get("twitter", {}).get("url", ""))
+            ceo_data["x"] = clean_url(ceo_data["ceo_profiles"].get("x", {}).get("url", ""))
+            ceo_data["instagram"] = clean_url(ceo_data["ceo_profiles"].get("instagram", {}).get("url", ""))
+            ceo_data["tiktok"] = clean_url(ceo_data["ceo_profiles"].get("tiktok", {}).get("url", ""))
             
             self.results["ceo_data"] = ceo_data
-            
-            # Count successful CEO finds
             successful_ceo_finds = sum(1 for p in ceo_profiles_data if p.get("name"))
-            print(f"✅ CEO search complete: {successful_ceo_finds} successful profile(s) found")
+            print(f"✅ CEO search complete: {successful_ceo_finds} successful profile(s) found via {self.results['ceo_data']['search_method']}")
             
             # Step 3: Scrape company website for contact information
             print(f"\n🌐 STEP 2: Scraping company website for contacts...")

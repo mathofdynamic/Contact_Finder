@@ -1,0 +1,207 @@
+{
+  "session_id": "f517b01f-d267-40e3-aae3-9862bf2b0534",
+  "user_file_name": "Company_domains_-_Sheet1.csv",
+  "total_companies": 20,
+  "processed_companies": 4,
+  "current_company": "berachain.com",
+  "is_running": true,
+  "is_paused": false,
+  "start_time": 1756125375.7291908,
+  "company_list": [
+    "monad.xyz",
+    "eigenlayer.xyz",
+    "celestia.org",
+    "ritual.net",
+    "berachain.com",
+    "availproject.org",
+    "succinct.xyz",
+    "layerzero.network",
+    "gensyn.ai",
+    "ondo.finance",
+    "centrifuge.io",
+    "movementlabs.xyz",
+    "espressosys.com",
+    "hivemapper.com",
+    "weatherxm.com",
+    "privy.io",
+    "worldcoin.org",
+    "farcaster.xyz",
+    "galactica.com",
+    "ironmill.xyz"
+  ],
+  "results": [
+    {
+      "company_domain": "https://www.monad.xyz",
+      "company_name": "Monad",
+      "company_website_data": {
+        "domain": "https://www.monad.xyz",
+        "logo_url": "https://cdn.prod.website-files.com/667c57e6f9254a4b6d914440/66956efeb01de969bd7b8abc_Logo%20Horizontal.svg",
+        "emails": [],
+        "phones": [],
+        "social_links": {
+          "discord": "https://discord.gg/monaddev",
+          "x": "https://x.com/monad_dev",
+          "linkedin": "https://www.linkedin.com/company/monad-foundation",
+          "telegram": "https://t.me/monad_xyz"
+        },
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 2,
+        "ceo_profiles": {
+          "twitter_x": {
+            "url": "https://x.com/0x_eunice",
+            "name": "CEO Profile 1",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          },
+          "linkedin": {
+            "url": "https://www.linkedin.com/in/keone-hon",
+            "name": "CEO Profile 2",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          }
+        },
+        "linkedin": "https://www.linkedin.com/in/keone-hon",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756125378,
+      "success": true,
+      "errors": []
+    },
+    {
+      "company_domain": "https://www.eigencloud.xyz",
+      "company_name": "Eigencloud",
+      "company_website_data": {
+        "domain": "https://www.eigencloud.xyz",
+        "logo_url": null,
+        "emails": [
+          "press@eigenlabs.org"
+        ],
+        "phones": [],
+        "social_links": {
+          "x": "https://x.com/eigenlayer",
+          "discord": "https://discord.gg/eigenlayer",
+          "github": "https://github.com/Layr-Labs",
+          "youtube": "https://www.youtube.com/@EigenLayer"
+        },
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 0,
+        "ceo_profiles": {},
+        "linkedin": "",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756125468,
+      "success": true,
+      "errors": []
+    },
+    {
+      "company_domain": "https://celestia.org",
+      "company_name": "Celestia",
+      "company_website_data": {
+        "domain": "https://celestia.org",
+        "logo_url": null,
+        "emails": [],
+        "phones": [],
+        "social_links": {},
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 2,
+        "ceo_profiles": {
+          "twitter_x": {
+            "url": "https://twitter.com/kreuzuquer",
+            "name": "CEO Profile 1",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          },
+          "instagram": {
+            "url": "https://www.instagram.com/musalbass/",
+            "name": "CEO Profile 2",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          }
+        },
+        "linkedin": "",
+        "twitter": "",
+        "x": "",
+        "instagram": "https://www.instagram.com/musalbass/",
+        "tiktok": ""
+      },
+      "timestamp": 1756125555,
+      "success": true,
+      "errors": []
+    },
+    {
+      "company_domain": "https://ritual.net",
+      "company_name": "Ritual",
+      "company_website_data": {
+        "domain": "https://ritual.net",
+        "logo_url": null,
+        "emails": [
+          "hello@ritual.net"
+        ],
+        "phones": [],
+        "social_links": {
+          "x": "https://twitter.com/ritualnet",
+          "discord": "https://discord.com/invite/ritual-net",
+          "github": "https://github.com/ritual-net"
+        },
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 0,
+        "ceo_profiles": {},
+        "linkedin": "",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756125639,
+      "success": true,
+      "errors": []
+    }
+  ],
+  "errors": []
+}

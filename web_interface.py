@@ -133,6 +133,8 @@ class ProcessingSession:
                 'CEO Twitter/X',
                 'CEO Instagram',
                 'CEO TikTok',
+                'Search Method',
+                'Search Confidence',
                 'Processing Status',
                 'Timestamp'
             ]
@@ -186,6 +188,8 @@ class ProcessingSession:
                         twitter_url,
                         instagram_url,
                         tiktok_url,
+                        ceo_data.get('search_method', 'Unknown'),
+                        ceo_data.get('search_confidence', 'Unknown'),
                         'Success' if result.get('success') else 'Failed',
                         datetime.fromtimestamp(result.get('timestamp', time.time())).strftime('%Y-%m-%d %H:%M:%S')
                     ]
@@ -508,7 +512,9 @@ def process_companies_background(session_id):
                             'tiktok_url': tiktok_url,
                             'emails_found': emails,
                             'phones_found': phones,
-                            'social_links_found': list(social_links.keys()) if social_links else []
+                            'social_links_found': list(social_links.keys()) if social_links else [],
+                            'search_method': result.get('ceo_data', {}).get('search_method', 'unknown'),
+                            'search_confidence': result.get('ceo_data', {}).get('search_confidence', 'unknown')
                         }
                     })
                     

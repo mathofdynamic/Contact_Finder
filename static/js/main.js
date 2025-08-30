@@ -394,8 +394,13 @@ class ContactFinderApp {
      */
     handleResultUpdate(data) {
         if (data.session_id === this.currentSessionId) {
+            const result = data.result || {};
+            const ceoData = result.ceo_data || {};
+            const searchMethod = ceoData.search_method || 'unknown';
+            const confidence = this.extractConfidenceFromResult(result, ceoData);
+            
             this.addResultToTable(data);
-            this.updateResultStats(data.status);
+            this.updateResultStats(data.status, searchMethod, confidence);
         }
     }
 
@@ -409,8 +414,13 @@ class ContactFinderApp {
 
         const result = data.result || {};
         const companyData = result.company_website_data || {};
+        const ceoData = result.ceo_data || {};
         const detailedInfo = data.detailed_info || {};
 
+        // Extract AI enhancement data
+        const searchMethod = ceoData.search_method || 'unknown';
+        const searchConfidence = this.extractConfidenceFromResult(result, ceoData);
+        
         // Format data for display using enhanced information
         const emails = detailedInfo.emails_found ? detailedInfo.emails_found.slice(0, 3).join(', ') + 
                       (detailedInfo.emails_found.length > 3 ? '...' : '') : 'None';
@@ -427,26 +437,34 @@ class ContactFinderApp {
         const statusClass = data.status === 'success' ? 'success' : 'error';
         const statusIcon = data.status === 'success' ? 'fas fa-check' : 'fas fa-times';
         const statusText = data.status === 'success' ? 'Success' : 'Failed';
+        
+        // Generate search method badge
+        const searchMethodBadge = this.generateSearchMethodBadge(searchMethod);
+        
+        // Generate confidence badge
+        const confidenceBadge = this.generateConfidenceBadge(searchConfidence);
 
         row.innerHTML = `
             <td><strong>${data.company}</strong></td>
             <td>
-                <span class="status-badge ${statusClass}">
+                <span class="status-badge status-${statusClass}">
                     <i class="${statusIcon}"></i>
                     ${statusText}
                 </span>
             </td>
+            <td>${searchMethodBadge}</td>
+            <td>${confidenceBadge}</td>
             <td title="${emails}">${emails}</td>
             <td title="${phones}">${phones}</td>
             <td title="${socialPlatforms}">${socialPlatforms}</td>
             <td>
-                ${ceoLinkedIn ? `<a href="${ceoLinkedIn}" target="_blank" rel="noopener" title="${ceoLinkedIn}"><i class="fab fa-linkedin"></i> LinkedIn</a>` : '<span class="text-muted">None</span>'}
+                ${ceoLinkedIn ? `<a href="${ceoLinkedIn}" target="_blank" rel="noopener" class="profile-link" title="${ceoLinkedIn}"><i class="fab fa-linkedin"></i> LinkedIn</a>` : '<span class="text-muted">None</span>'}
             </td>
             <td>
-                ${ceoTwitter ? `<a href="${ceoTwitter}" target="_blank" rel="noopener" title="${ceoTwitter}"><i class="fab fa-twitter"></i> Twitter</a>` : '<span class="text-muted">None</span>'}
+                ${ceoTwitter ? `<a href="${ceoTwitter}" target="_blank" rel="noopener" class="profile-link" title="${ceoTwitter}"><i class="fab fa-twitter"></i> Twitter</a>` : '<span class="text-muted">None</span>'}
             </td>
             <td>
-                <span class="badge badge-info">${ceoProfilesCount} CEO profiles</span>
+                <span class="badge badge-info">${ceoProfilesCount} profiles</span>
                 ${data.status === 'success' ? '<button class="btn btn-sm btn-outline ml-2" onclick="app.viewDetails(\'' + (result.company_domain || data.company) + '\')" title="View Details"><i class="fas fa-eye"></i></button>' : ''}
             </td>
         `;
@@ -478,10 +496,22 @@ class ContactFinderApp {
     /**
      * Update result statistics
      */
-    updateResultStats(status) {
+    updateResultStats(status, searchMethod = 'unknown', confidence = 'unknown') {
         if (status === 'success') {
             const successCount = document.getElementById('successCount');
             successCount.textContent = parseInt(successCount.textContent) + 1;
+            
+            // Track AI success
+            if (searchMethod === 'gemini' || searchMethod === 'ai' || searchMethod === 'hybrid_ai_browser') {
+                const aiSuccessCount = document.getElementById('aiSuccessCount');
+                aiSuccessCount.textContent = parseInt(aiSuccessCount.textContent) + 1;
+            }
+            
+            // Track high confidence results
+            if (confidence === 'high') {
+                const highConfidenceCount = document.getElementById('highConfidenceCount');
+                highConfidenceCount.textContent = parseInt(highConfidenceCount.textContent) + 1;
+            }
         } else {
             const errorCount = document.getElementById('errorCount');
             errorCount.textContent = parseInt(errorCount.textContent) + 1;
@@ -835,6 +865,80 @@ class ContactFinderApp {
         };
         
         return iconMap[platform.toLowerCase()] || 'fas fa-link';
+    }
+    
+    /**
+     * Extract confidence level from result data
+     */
+    extractConfidenceFromResult(result, ceoData) {
+        // Check for search_confidence in various places
+        if (ceoData.search_confidence) {
+            return ceoData.search_confidence;
+        }
+        
+        // Check in CEO profiles
+        const ceoProfiles = ceoData.ceo_profiles || {};
+        for (const profile of Object.values(ceoProfiles)) {
+            if (profile && profile.search_confidence) {
+                return profile.search_confidence;
+            }
+        }
+        
+        // Check in result root
+        if (result.search_confidence) {
+            return result.search_confidence;
+        }
+        
+        // Default based on data quality
+        const hasLinkedIn = ceoData.linkedin || (ceoProfiles.linkedin && ceoProfiles.linkedin.url);
+        const hasTwitter = ceoData.twitter || ceoData.x || (ceoProfiles.twitter && ceoProfiles.twitter.url);
+        const profilesFound = ceoData.profiles_found || 0;
+        
+        if (hasLinkedIn && hasTwitter) return 'high';
+        if (hasLinkedIn || hasTwitter || profilesFound > 0) return 'medium';
+        return 'low';
+    }
+    
+    /**
+     * Generate search method badge
+     */
+    generateSearchMethodBadge(searchMethod) {
+        const methodMap = {
+            'gemini': { class: 'method-ai', icon: 'fas fa-robot', text: 'AI Search' },
+            'ai': { class: 'method-ai', icon: 'fas fa-robot', text: 'AI Search' },
+            'google_search_tool': { class: 'method-ai', icon: 'fas fa-search', text: 'AI+Search' },
+            'hybrid_ai_browser': { class: 'method-hybrid', icon: 'fas fa-sync-alt', text: 'Hybrid' },
+            'first_result_validation': { class: 'method-browser', icon: 'fas fa-globe', text: 'Browser' },
+            'browser': { class: 'method-browser', icon: 'fas fa-globe', text: 'Browser' },
+            'fallback': { class: 'method-fallback', icon: 'fas fa-shield-alt', text: 'Fallback' },
+            'unknown': { class: 'method-fallback', icon: 'fas fa-question', text: 'Unknown' }
+        };
+        
+        const method = methodMap[searchMethod] || methodMap['unknown'];
+        
+        return `<span class="search-method-badge ${method.class}" title="Search Method: ${method.text}">
+                    <i class="${method.icon}"></i>
+                    ${method.text}
+                </span>`;
+    }
+    
+    /**
+     * Generate confidence badge
+     */
+    generateConfidenceBadge(confidence) {
+        const confidenceMap = {
+            'high': { class: 'confidence-high', icon: 'fas fa-check-circle', text: 'High' },
+            'medium': { class: 'confidence-medium', icon: 'fas fa-exclamation-circle', text: 'Medium' },
+            'low': { class: 'confidence-low', icon: 'fas fa-times-circle', text: 'Low' },
+            'unknown': { class: 'confidence-low', icon: 'fas fa-question-circle', text: 'Unknown' }
+        };
+        
+        const conf = confidenceMap[confidence] || confidenceMap['unknown'];
+        
+        return `<span class="confidence-badge ${conf.class}" title="Result Confidence: ${conf.text}">
+                    <i class="${conf.icon}"></i>
+                    ${conf.text}
+                </span>`;
     }
 }
 

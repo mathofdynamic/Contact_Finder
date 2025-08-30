@@ -1,0 +1,611 @@
+{
+  "session_id": "91b940ea-797f-4a0d-a019-1c4c8c444977",
+  "user_file_name": "20250825_112328_Company_domains_-_Sheet1.csv",
+  "total_companies": 20,
+  "processed_companies": 12,
+  "current_company": "espressosys.com",
+  "is_running": true,
+  "is_paused": false,
+  "start_time": 1756540539.0258749,
+  "company_list": [
+    "monad.xyz",
+    "eigenlayer.xyz",
+    "celestia.org",
+    "ritual.net",
+    "berachain.com",
+    "availproject.org",
+    "succinct.xyz",
+    "layerzero.network",
+    "gensyn.ai",
+    "ondo.finance",
+    "centrifuge.io",
+    "movementlabs.xyz",
+    "espressosys.com",
+    "hivemapper.com",
+    "weatherxm.com",
+    "privy.io",
+    "worldcoin.org",
+    "farcaster.xyz",
+    "galactica.com",
+    "ironmill.xyz"
+  ],
+  "results": [
+    {
+      "company_domain": "https://www.monad.xyz",
+      "company_name": "Monad",
+      "company_website_data": {
+        "domain": "https://www.monad.xyz",
+        "logo_url": "https://cdn.prod.website-files.com/667c57e6f9254a4b6d914440/66956efeb01de969bd7b8abc_Logo%20Horizontal.svg",
+        "emails": [],
+        "phones": [],
+        "social_links": {
+          "discord": "https://discord.gg/monaddev",
+          "x": "https://x.com/monad_dev",
+          "linkedin": "https://www.linkedin.com/company/monad-foundation",
+          "telegram": "https://t.me/monad_xyz"
+        },
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 2,
+        "ceo_profiles": {
+          "twitter_x": {
+            "url": "https://x.com/keonehd",
+            "name": "CEO Profile 1",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          },
+          "linkedin": {
+            "url": "https://www.linkedin.com/in/keone-hon",
+            "name": "CEO Profile 2",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          }
+        },
+        "linkedin": "https://www.linkedin.com/in/keone-hon",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756540541,
+      "success": true,
+      "errors": []
+    },
+    {
+      "company_domain": "https://www.eigencloud.xyz",
+      "company_name": "Eigencloud",
+      "company_website_data": {
+        "domain": "https://www.eigencloud.xyz",
+        "logo_url": null,
+        "emails": [
+          "press@eigenlabs.org"
+        ],
+        "phones": [],
+        "social_links": {
+          "x": "https://x.com/eigenlayer",
+          "discord": "https://discord.gg/eigenlayer",
+          "github": "https://github.com/Layr-Labs",
+          "youtube": "https://www.youtube.com/@EigenLayer"
+        },
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 0,
+        "ceo_profiles": {},
+        "linkedin": "",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756540645,
+      "success": true,
+      "errors": []
+    },
+    {
+      "company_domain": "https://celestia.org",
+      "company_name": "Celestia",
+      "company_website_data": {
+        "domain": "https://celestia.org",
+        "logo_url": "https://celestia.org/images/celestia-logo.svg",
+        "emails": [],
+        "phones": [],
+        "social_links": {
+          "x": "https://x.com/convergeonchain/status/1912853619038461967/",
+          "discord": "https://discord.com/invite/YsnTPcSfWQ",
+          "telegram": "https://t.me/CelestiaCommunity/",
+          "reddit": "https://www.reddit.com/r/CelestiaNetwork/",
+          "github": "https://github.com/celestiaorg/"
+        },
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 3,
+        "ceo_profiles": {
+          "twitter_x": {
+            "url": "https://x.com/musalbas",
+            "name": "CEO Profile 1",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          },
+          "linkedin": {
+            "url": "https://uk.linkedin.com/in/steve-jones-a38a3811",
+            "name": "CEO Profile 2",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          },
+          "instagram": {
+            "url": "https://www.instagram.com/musalbass/",
+            "name": "CEO Profile 3",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          }
+        },
+        "linkedin": "https://uk.linkedin.com/in/steve-jones-a38a3811",
+        "twitter": "",
+        "x": "",
+        "instagram": "https://www.instagram.com/musalbass/",
+        "tiktok": ""
+      },
+      "timestamp": 1756540736,
+      "success": true,
+      "errors": []
+    },
+    {
+      "company_domain": "https://ritual.net",
+      "company_name": "Ritual",
+      "company_website_data": {
+        "domain": "https://ritual.net",
+        "logo_url": null,
+        "emails": [
+          "hello@ritual.net"
+        ],
+        "phones": [],
+        "social_links": {
+          "x": "https://twitter.com/ritualnet",
+          "discord": "https://discord.com/invite/ritual-net",
+          "github": "https://github.com/ritual-net"
+        },
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "gemini",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 1,
+        "ceo_profiles": {
+          "linkedin": {
+            "url": "https://www.linkedin.com/in/katerinaschneider/",
+            "name": "Katerina Schneider",
+            "headline": "CEO & Co-Founder",
+            "found": true,
+            "error": null
+          }
+        },
+        "linkedin": "https://www.linkedin.com/in/katerinaschneider/",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756540827,
+      "success": true,
+      "errors": []
+    },
+    {
+      "company_domain": "https://berachain.com",
+      "company_name": "Berachain",
+      "company_website_data": {
+        "domain": "https://berachain.com",
+        "logo_url": null,
+        "emails": [],
+        "phones": [
+          "1756540918"
+        ],
+        "social_links": {},
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 2,
+        "ceo_profiles": {
+          "twitter_x": {
+            "url": "https://x.com/itsdevbear",
+            "name": "CEO Profile 1",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          },
+          "linkedin": {
+            "url": "https://www.linkedin.com/in/adamlee3",
+            "name": "CEO Profile 2",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          }
+        },
+        "linkedin": "https://www.linkedin.com/in/adamlee3",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756540836,
+      "success": true,
+      "errors": []
+    },
+    {
+      "company_domain": "https://www.availproject.org",
+      "company_name": "Availproject",
+      "company_website_data": {
+        "domain": "https://www.availproject.org",
+        "logo_url": "https://www.availproject.org/_next/static/media/avail_logo.9c818c5a.png",
+        "emails": [],
+        "phones": [],
+        "social_links": {
+          "github": "https://github.com/availproject/nexus",
+          "discord": "https://discord.gg/AvailProject",
+          "x": "https://twitter.com/AvailProject",
+          "telegram": "https://t.me/AvailCommunity",
+          "linkedin": "https://www.linkedin.com/company/availproject/"
+        },
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 2,
+        "ceo_profiles": {
+          "twitter_x": {
+            "url": "https://x.com/anuragarjun",
+            "name": "CEO Profile 1",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          },
+          "linkedin": {
+            "url": "https://in.linkedin.com/in/anuragarjun",
+            "name": "CEO Profile 2",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          }
+        },
+        "linkedin": "https://in.linkedin.com/in/anuragarjun",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756540921,
+      "success": true,
+      "errors": []
+    },
+    {
+      "company_domain": "https://www.succinct.xyz",
+      "company_name": "Succinct",
+      "company_website_data": {
+        "domain": "https://www.succinct.xyz",
+        "logo_url": null,
+        "emails": [],
+        "phones": [],
+        "social_links": {
+          "x": "https://x.com/succinctlabs",
+          "linkedin": "https://www.linkedin.com/company/succinctlabs/",
+          "discord": "https://discord.com/invite/succinctlabs"
+        },
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 2,
+        "ceo_profiles": {
+          "twitter_x": {
+            "url": "https://x.com/keanooreeves",
+            "name": "CEO Profile 1",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          },
+          "linkedin": {
+            "url": "https://www.linkedin.com/in/umaroy",
+            "name": "CEO Profile 2",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          }
+        },
+        "linkedin": "https://www.linkedin.com/in/umaroy",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756541017,
+      "success": true,
+      "errors": []
+    },
+    {
+      "company_domain": "https://layerzero.network",
+      "company_name": "Layerzero",
+      "company_website_data": {
+        "domain": "https://layerzero.network",
+        "logo_url": null,
+        "emails": [],
+        "phones": [],
+        "social_links": {
+          "github": "https://github.com/LayerZero-Labs/LayerZero-v2",
+          "telegram": "https://t.me/joinchat/VcqxYkStIDsyN2Rh",
+          "discord": "https://discord.gg/ktbvm8Nkcr",
+          "x": "https://x.com/layerzero_core"
+        },
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 3,
+        "ceo_profiles": {
+          "twitter_x": {
+            "url": "https://x.com/LayerZero_Core/affiliates",
+            "name": "CEO Profile 1",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          },
+          "linkedin": {
+            "url": "https://ca.linkedin.com/in/bryanpellegrino",
+            "name": "CEO Profile 2",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          },
+          "instagram": {
+            "url": "https://www.instagram.com/cryptomadsofficial/",
+            "name": "CEO Profile 3",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          }
+        },
+        "linkedin": "https://ca.linkedin.com/in/bryanpellegrino",
+        "twitter": "",
+        "x": "",
+        "instagram": "https://www.instagram.com/cryptomadsofficial/",
+        "tiktok": ""
+      },
+      "timestamp": 1756541109,
+      "success": true,
+      "errors": []
+    },
+    {
+      "company_domain": "https://www.gensyn.ai",
+      "company_name": "Gensyn",
+      "company_website_data": {
+        "domain": "https://www.gensyn.ai",
+        "logo_url": "https://cdn.prod.website-files.com/66bc6da8fe284e4693088ff7/66bc6da8fe284e4693089004_Vector%20(Stroke)%20(1).svg",
+        "emails": [],
+        "phones": [],
+        "social_links": {
+          "github": "https://github.com/gensyn-ai/rl-swarm/blob/main/README.md",
+          "discord": "https://discord.com/invite/gensyn",
+          "x": "https://x.com/gensynai",
+          "linkedin": "https://www.linkedin.com/company/gensynai/"
+        },
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 2,
+        "ceo_profiles": {
+          "twitter_x": {
+            "url": "https://x.com/fenbielding",
+            "name": "CEO Profile 1",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          },
+          "linkedin": {
+            "url": "https://ca.linkedin.com/in/steven-peng-3073491a7/en",
+            "name": "CEO Profile 2",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          }
+        },
+        "linkedin": "https://ca.linkedin.com/in/steven-peng-3073491a7/en",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756541210,
+      "success": true,
+      "errors": []
+    },
+    {
+      "company_domain": "https://ondo.finance",
+      "company_name": "Ondo",
+      "company_website_data": {
+        "domain": "https://ondo.finance",
+        "logo_url": "https://ondo.finance/images/blackrock.svg",
+        "emails": [],
+        "phones": [],
+        "social_links": {
+          "x": "https://twitter.com/OndoFinance",
+          "github": "https://github.com/ondoprotocol",
+          "telegram": "https://t.me/ondofinance"
+        },
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 2,
+        "ceo_profiles": {
+          "twitter_x": {
+            "url": "https://x.com/nathanlallman",
+            "name": "CEO Profile 1",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          },
+          "linkedin": {
+            "url": "https://www.linkedin.com/in/nathanlallman",
+            "name": "CEO Profile 2",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          }
+        },
+        "linkedin": "https://www.linkedin.com/in/nathanlallman",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756541299,
+      "success": true,
+      "errors": []
+    },
+    {
+      "company_domain": "https://centrifuge.io",
+      "company_name": "Centrifuge",
+      "company_website_data": {
+        "domain": "https://centrifuge.io",
+        "logo_url": "https://cdn.prod.website-files.com/6706324b4c48131ee537ff96/67d2bd73ac2e925f2cca6b82_aave-logo.svg",
+        "emails": [],
+        "phones": [],
+        "social_links": {
+          "x": "https://twitter.com/centrifuge",
+          "linkedin": "https://www.linkedin.com/company/centrifugehq/",
+          "github": "https://github.com/centrifuge/",
+          "youtube": "https://www.youtube.com/channel/UCfNkoq7YLrr8MeSJ3a6jVcA",
+          "discord": "https://discord.com/invite/yEzyUq5gxF",
+          "telegram": "https://t.me/centrifuge_chat"
+        },
+        "success": true
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 1,
+        "ceo_profiles": {
+          "linkedin": {
+            "url": "https://ae.linkedin.com/in/anish-alfred-27230127",
+            "name": "CEO Profile 1",
+            "headline": "Profile found via Google search",
+            "found": true,
+            "error": null
+          }
+        },
+        "linkedin": "https://ae.linkedin.com/in/anish-alfred-27230127",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756541415,
+      "success": true,
+      "errors": []
+    },
+    {
+      "company_domain": "https://movementlabs.xyz",
+      "company_name": "Movementlabs",
+      "company_website_data": {
+        "domain": "https://movementlabs.xyz",
+        "error": "Both methods failed. Primary: Message: timeout: Timed out receiving message from renderer: -0.010\n  (Session info: chrome=139.0.7258.139)\nStacktrace:\n0   chromedriver                        0x0000000104b52e00 cxxbridge1$str$ptr + 2742224\n1   chromedriver                        0x0000000104b4ad00 cxxbridge1$str$ptr + 2709200\n2   chromedriver                        0x00000001046950b8 cxxbridge1$string$len + 90520\n3   chromedriver                        0x000000010467ff4c cxxbridge1$string$len + 4140\n4   chromedriver                        0x000000010467fcc4 cxxbridge1$string$len + 3492\n5   chromedriver                        0x000000010467da7c chromedriver + 203388\n6   chromedriver                        0x000000010467e60c chromedriver + 206348\n7   chromedriver                        0x000000010468b824 cxxbridge1$string$len + 51460\n8   chromedriver                        0x00000001046a16d8 cxxbridge1$string$len + 141240\n9   chromedriver                        0x000000010467ec68 chromedriver + 207976\n10  chromedriver                        0x00000001046a14e0 cxxbridge1$string$len + 140736\n11  chromedriver                        0x000000010471d8c8 cxxbridge1$string$len + 649640\n12  chromedriver                        0x00000001046d08f4 cxxbridge1$string$len + 334292\n13  chromedriver                        0x0000000104b16478 cxxbridge1$str$ptr + 2494024\n14  chromedriver                        0x0000000104b196a4 cxxbridge1$str$ptr + 2506868\n15  chromedriver                        0x0000000104af73b0 cxxbridge1$str$ptr + 2366848\n16  chromedriver                        0x0000000104b19f4c cxxbridge1$str$ptr + 2509084\n17  chromedriver                        0x0000000104ae84a8 cxxbridge1$str$ptr + 2305656\n18  chromedriver                        0x0000000104b39644 cxxbridge1$str$ptr + 2637844\n19  chromedriver                        0x0000000104b397d0 cxxbridge1$str$ptr + 2638240\n20  chromedriver                        0x0000000104b4a94c cxxbridge1$str$ptr + 2708252\n21  libsystem_pthread.dylib             0x000000018c6fabc8 _pthread_start + 136\n22  libsystem_pthread.dylib             0x000000018c6f5b80 thread_start + 8\n. Fallback: Invalid or unreachable URL",
+        "success": false
+      },
+      "ceo_data": {
+        "search_method": "first_result_validation",
+        "platforms_searched": [
+          "Twitter/X",
+          "LinkedIn",
+          "Instagram",
+          "TikTok"
+        ],
+        "profiles_found": 0,
+        "ceo_profiles": {},
+        "linkedin": "",
+        "twitter": "",
+        "x": "",
+        "instagram": "",
+        "tiktok": ""
+      },
+      "timestamp": 1756541511,
+      "success": false,
+      "errors": []
+    }
+  ],
+  "errors": []
+}
