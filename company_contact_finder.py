@@ -22,9 +22,12 @@ import time
 import random
 import traceback
 import requests
+import smtplib
+import dns.resolver
 from typing import Optional
-from urllib.parse import urlparse, unquote
+from urllib.parse import urlparse, unquote, urljoin
 from dotenv import load_dotenv
+from bs4 import BeautifulSoup
 
 # Selenium imports (for company website scraping)
 from selenium import webdriver
@@ -108,6 +111,241 @@ USER_AGENTS = [
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15"
 ]
 
+class CEOEmailDiscovery:
+    """Enhanced CEO email discovery and validation system"""
+    
+    def __init__(self):
+        self.common_ceo_prefixes = [
+            'ceo', 'founder', 'president', 'director', 'owner', 'chief',
+            'admin', 'info', 'contact', 'hello', 'support'
+        ]
+        self.session = requests.Session()
+        self.session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+        })
+    
+    def extract_names_from_ceo_profile(self, ceo_name: str) -> dict:
+        """Extract different name formats from CEO full name"""
+        if not ceo_name:
+            return {}
+        
+        # Clean the name
+        clean_name = re.sub(r'[^\w\s-]', '', ceo_name.lower())
+        clean_name = re.sub(r'\b(ceo|founder|co-founder|president|director|chief)\b', '', clean_name)
+        clean_name = clean_name.strip()
+        
+        parts = clean_name.split()
+        if not parts:
+            return {}
+        
+        first_name = parts[0]
+        last_name = parts[-1] if len(parts) > 1 else ""
+        
+        name_formats = {
+            'first': first_name,
+            'last': last_name,
+            'firstlast': f"{first_name}{last_name}" if last_name else first_name,
+            'first.last': f"{first_name}.{last_name}" if last_name else first_name,
+            'first_last': f"{first_name}_{last_name}" if last_name else first_name,
+            'firstlastinitial': f"{first_name}{last_name[0]}" if last_name else first_name,
+            'firstinitiallast': f"{first_name[0]}{last_name}" if last_name else first_name,
+        }
+        
+        # Remove empty values
+        return {k: v for k, v in name_formats.items() if v and len(v) > 1}
+    
+    def extract_domain_from_url(self, company_url: str) -> str:
+        """Extract clean domain from company URL"""
+        try:
+            if not company_url.startswith(('http://', 'https://')):
+                company_url = 'https://' + company_url
+            
+            parsed = urlparse(company_url)
+            domain = parsed.netloc.lower()
+            
+            # Remove www prefix
+            if domain.startswith('www.'):
+                domain = domain[4:]
+                
+            return domain
+        except:
+            return ""
+    
+    def generate_email_patterns(self, ceo_name: str, company_domain: str) -> list:
+        """Generate potential CEO email patterns"""
+        domain = self.extract_domain_from_url(company_domain)
+        if not domain:
+            return []
+        
+        emails = []
+        name_formats = self.extract_names_from_ceo_profile(ceo_name)
+        
+        # CEO name-based emails
+        for format_name, name_value in name_formats.items():
+            if name_value:
+                emails.append(f"{name_value}@{domain}")
+        
+        # Common CEO role-based emails
+        for prefix in self.common_ceo_prefixes:
+            emails.append(f"{prefix}@{domain}")
+        
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_emails = []
+        for email in emails:
+            if email not in seen:
+                seen.add(email)
+                unique_emails.append(email)
+        
+        return unique_emails
+    
+    def check_email_syntax(self, email: str) -> bool:
+        """Check if email has valid syntax"""
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        return re.match(pattern, email) is not None
+    
+    def check_domain_mx_record(self, domain: str) -> dict:
+        """Enhanced MX record checking with detailed info"""
+        try:
+            mx_records = dns.resolver.resolve(domain, 'MX')
+            # Handle MX records properly - they are dns.rdtypes.IN.MX.MX objects
+            mx_list = []
+            for mx in mx_records:
+                # Convert to string directly to get the exchange value
+                mx_list.append(str(mx))
+            
+            # Check for high-quality email providers
+            quality_indicators = {
+                'google': any('google' in mx.lower() for mx in mx_list),
+                'microsoft': any(any(provider in mx.lower() for provider in ['outlook', 'microsoft', 'office365']) for mx in mx_list),
+                'professional': len(mx_list) > 0 and not any('free' in mx.lower() for mx in mx_list)
+            }
+            
+            return {
+                "has_mx": True,
+                "mx_records": mx_list,
+                "quality_score": sum(quality_indicators.values()) * 10,
+                "primary_mx": mx_list[0] if mx_list else None
+            }
+        except:
+            return {"has_mx": False, "mx_records": [], "quality_score": 0, "primary_mx": None}
+    
+    def check_smtp_verification(self, email: str, timeout: int = 8) -> dict:
+        """Enhanced SMTP verification with better error handling"""
+        if not self.check_email_syntax(email):
+            return {"valid": False, "confidence": 0, "reason": "Invalid syntax", "method": "syntax"}
+        
+        domain = email.split('@')[1]
+        mx_info = self.check_domain_mx_record(domain)
+        
+        if not mx_info["has_mx"]:
+            return {"valid": False, "confidence": 0, "reason": "No MX record", "method": "mx"}
+        
+        try:
+            mx_record = mx_info["primary_mx"]
+            with smtplib.SMTP(timeout=timeout) as server:
+                server.connect(mx_record, 25)
+                server.helo()
+                server.mail('verification@example.com')
+                code, message = server.rcpt(email)
+                
+                base_confidence = 85 + mx_info["quality_score"]  # 85-115 range
+                
+                if code == 250:
+                    return {
+                        "valid": True, 
+                        "confidence": min(base_confidence, 95), 
+                        "reason": f"SMTP accepts email (code: {code})", 
+                        "method": "smtp",
+                        "mx_quality": mx_info["quality_score"]
+                    }
+                elif code in [450, 451, 452]:  # Temporary issues
+                    return {
+                        "valid": True, 
+                        "confidence": min(base_confidence - 15, 80), 
+                        "reason": f"Temporarily unavailable but likely valid (code: {code})", 
+                        "method": "smtp"
+                    }
+                else:
+                    return {
+                        "valid": False, 
+                        "confidence": 15, 
+                        "reason": f"SMTP rejection (code: {code})", 
+                        "method": "smtp"
+                    }
+        except Exception as e:
+            return {
+                "valid": None, 
+                "confidence": 50, 
+                "reason": f"SMTP check failed: {str(e)[:100]}", 
+                "method": "smtp_error"
+            }
+    
+    def validate_ceo_email_comprehensive(self, email: str, company_url: str = "", ceo_name: str = "") -> dict:
+        """Comprehensive email validation using multiple methods"""
+        
+        # Step 1: Basic syntax and MX
+        if not self.check_email_syntax(email):
+            return {
+                "email": email,
+                "valid": False,
+                "final_confidence": 0,
+                "method": "syntax",
+                "reason": "Invalid email syntax"
+            }
+        
+        # Step 2: SMTP Verification (primary method)
+        smtp_result = self.check_smtp_verification(email)
+        base_confidence = smtp_result.get("confidence", 0)
+        
+        if smtp_result.get("valid") is False and base_confidence < 30:
+            return {
+                "email": email,
+                "valid": False,
+                "final_confidence": base_confidence,
+                "method": "smtp",
+                "reason": smtp_result.get("reason", "SMTP rejection")
+            }
+        
+        # Step 3: Additional validation layers (confidence boosting)
+        confidence_boost = 0
+        reasons = [smtp_result.get("reason", "")]
+        
+        # Name pattern analysis
+        if ceo_name:
+            local_part = email.split('@')[0].lower()
+            name_parts = [part.lower() for part in re.sub(r'[^\w\s]', '', ceo_name).split()]
+            name_parts = [part for part in name_parts if len(part) > 1]
+            
+            if len(name_parts) >= 1:
+                first_name = name_parts[0]
+                if local_part == first_name:
+                    confidence_boost += 10
+                    reasons.append("Matches first name")
+                elif first_name in local_part:
+                    confidence_boost += 5
+                    reasons.append("Contains first name")
+        
+        # Professional format analysis
+        local_part = email.split('@')[0]
+        if re.match(r'^[a-z]+(\.|-|_)?[a-z]+$', local_part.lower()):
+            confidence_boost += 8
+            reasons.append("Professional format")
+        
+        # Calculate final confidence
+        final_confidence = min(base_confidence + confidence_boost, 98)  # Cap at 98%
+        is_valid = final_confidence >= 60  # 60% threshold for "valid"
+        
+        return {
+            "email": email,
+            "valid": is_valid,
+            "final_confidence": final_confidence,
+            "base_confidence": base_confidence,
+            "confidence_boost": confidence_boost,
+            "method": "comprehensive",
+            "reason": "; ".join([r for r in reasons if r])
+        }
+
 class CompanyContactFinder:
     def __init__(self, skip_ceo_on_captcha=False):
         self.company_domain = None
@@ -123,6 +361,9 @@ class CompanyContactFinder:
         # Gemini model/client for AI-powered CEO search
         self.gemini_model = None
         self.gemini_client = None  # New client for google-genai package
+        
+        # CEO Email Discovery system
+        self.email_discovery = CEOEmailDiscovery()
         
         self.results = {
             "company_domain": None,
@@ -1658,6 +1899,71 @@ Return the information in this JSON format:
                 
         except Exception as e:
             print(f"⚠️ Error during cleanup: {e}")
+    
+    def discover_ceo_emails(self, ceo_profiles_data: list) -> dict:
+        """Discover and validate CEO email addresses using enhanced methods"""
+        if not ceo_profiles_data:
+            return {"best_email": "", "confidence": 0, "method": "none", "all_emails": []}
+        
+        # Extract CEO name from profiles
+        ceo_name = ""
+        for profile in ceo_profiles_data:
+            name = profile.get("name", "")
+            if name and "CEO Profile" not in name:  # Skip generic names
+                ceo_name = name
+                break
+        
+        if not ceo_name:
+            print(f"   ⚠️ No CEO name found for email generation")
+            return {"best_email": "", "confidence": 0, "method": "none", "all_emails": []}
+        
+        # Generate email patterns
+        email_patterns = self.email_discovery.generate_email_patterns(ceo_name, self.company_domain or "")
+        print(f"   📝 Generated {len(email_patterns)} email patterns for {ceo_name}")
+        
+        if not email_patterns:
+            return {"best_email": "", "confidence": 0, "method": "none", "all_emails": []}
+        
+        # Validate top email candidates (limit to 10 for performance)
+        validated_emails = []
+        top_patterns = email_patterns[:10]
+        
+        print(f"   🔍 Validating top {len(top_patterns)} email candidates...")
+        
+        for email in top_patterns:
+            try:
+                result = self.email_discovery.validate_ceo_email_comprehensive(
+                    email, 
+                    self.company_domain or "", 
+                    ceo_name
+                )
+                
+                if result.get("valid") and result.get("final_confidence", 0) >= 60:
+                    validated_emails.append(result)
+                    confidence = result.get("final_confidence", 0)
+                    print(f"      ✅ {email} ({confidence}% confidence)")
+                else:
+                    confidence = result.get("final_confidence", 0)
+                    print(f"      ❌ {email} ({confidence}% confidence)")
+                    
+            except Exception as e:
+                print(f"      ⚠️ Error validating {email}: {str(e)[:50]}")
+                continue
+        
+        # Sort by confidence and return best result
+        if validated_emails:
+            validated_emails.sort(key=lambda x: x.get("final_confidence", 0), reverse=True)
+            best_email_result = validated_emails[0]
+            
+            return {
+                "best_email": best_email_result.get("email", ""),
+                "confidence": best_email_result.get("final_confidence", 0),
+                "method": best_email_result.get("method", "comprehensive"),
+                "reason": best_email_result.get("reason", ""),
+                "all_emails": [e.get("email", "") for e in validated_emails]
+            }
+        else:
+            return {"best_email": "", "confidence": 0, "method": "none", "all_emails": []}
 
 
     def find_company_contacts(self, company_input: str) -> dict:
@@ -1857,6 +2163,24 @@ Return the information in this JSON format:
             self.results["ceo_data"] = ceo_data
             successful_ceo_finds = sum(1 for p in ceo_profiles_data if p.get("name"))
             print(f"✅ CEO search complete: {successful_ceo_finds} successful profile(s) found via {self.results['ceo_data']['search_method']}")
+            
+            # NEW: Step 2.5: CEO Email Discovery
+            print(f"\n📧 STEP 2.5: Discovering CEO email addresses...")
+            ceo_email_data = self.discover_ceo_emails(ceo_profiles_data)
+            
+            # Add email data to CEO data structure
+            ceo_data["ceo_email"] = ceo_email_data.get("best_email", "")
+            ceo_data["email_confidence"] = ceo_email_data.get("confidence", 0)
+            ceo_data["email_validation_method"] = ceo_email_data.get("method", "none")
+            ceo_data["all_validated_emails"] = ceo_email_data.get("all_emails", [])
+            
+            self.results["ceo_data"] = ceo_data
+            
+            if ceo_email_data.get("best_email"):
+                confidence = ceo_email_data.get("confidence", 0)
+                print(f"✅ CEO email discovery complete: {ceo_email_data['best_email']} ({confidence}% confidence)")
+            else:
+                print(f"❌ No validated CEO emails found")
             
             # Step 3: Scrape company website for contact information
             print(f"\n🌐 STEP 2: Scraping company website for contacts...")

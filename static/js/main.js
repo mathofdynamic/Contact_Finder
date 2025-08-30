@@ -422,15 +422,20 @@ class ContactFinderApp {
         const searchConfidence = this.extractConfidenceFromResult(result, ceoData);
         
         // Format data for display using enhanced information
-        const emails = detailedInfo.emails_found ? detailedInfo.emails_found.slice(0, 3).join(', ') + 
-                      (detailedInfo.emails_found.length > 3 ? '...' : '') : 'None';
-        const phones = detailedInfo.phones_found ? detailedInfo.phones_found.slice(0, 2).join(', ') +
-                      (detailedInfo.phones_found.length > 2 ? '...' : '') : 'None';
-        const socialPlatforms = detailedInfo.social_links_found ? detailedInfo.social_links_found.join(', ') : 'None';
+        const emails = detailedInfo.emails_found ? detailedInfo.emails_found.slice(0, 2).join(', ') + 
+                      (detailedInfo.emails_found.length > 2 ? '...' : '') : 'None';
+        const phones = detailedInfo.phones_found ? detailedInfo.phones_found.slice(0, 1).join(', ') +
+                      (detailedInfo.phones_found.length > 1 ? '...' : '') : 'None';
+        const socialPlatforms = detailedInfo.social_links_found ? 
+                              (detailedInfo.social_links_found.length <= 2 ? 
+                                  detailedInfo.social_links_found.join(', ') : 
+                                  detailedInfo.social_links_found.slice(0, 2).join(', ') + '...') : 'None';
         
         // CEO profiles with better formatting
         const ceoLinkedIn = detailedInfo.linkedin_url || '';
         const ceoTwitter = detailedInfo.twitter_url || '';
+        const ceoEmail = detailedInfo.ceo_email || '';
+        const emailConfidence = detailedInfo.email_confidence || 0;
         const ceoProfilesCount = detailedInfo.ceo_profiles_count || 0;
 
         // Status badge
@@ -462,6 +467,15 @@ class ContactFinderApp {
             </td>
             <td>
                 ${ceoTwitter ? `<a href="${ceoTwitter}" target="_blank" rel="noopener" class="profile-link" title="${ceoTwitter}"><i class="fab fa-twitter"></i> Twitter</a>` : '<span class="text-muted">None</span>'}
+            </td>
+            <td>
+                ${this.formatEmailLink(ceoEmail)}
+            </td>
+            <td>
+                ${emailConfidence > 0 ? `<span class="${this.getEmailConfidenceClass(emailConfidence)}">
+                    <i class="${this.getEmailConfidenceIcon(emailConfidence)}"></i>
+                    ${emailConfidence}%
+                </span>` : '<span class="text-muted">N/A</span>'}
             </td>
             <td>
                 <span class="badge badge-info">${ceoProfilesCount} profiles</span>
@@ -800,6 +814,32 @@ class ContactFinderApp {
             `);
         }
         
+        // CEO Email Section
+        if (companyData.ceo_email && companyData.ceo_email.trim() !== '') {
+            const emailConfidenceDisplay = companyData.email_confidence ? 
+                `<span class="${this.getEmailConfidenceClass(companyData.email_confidence)}" title="Email Validation Confidence: ${companyData.email_confidence}%">
+                    <i class="${this.getEmailConfidenceIcon(companyData.email_confidence)}"></i>
+                    ${companyData.email_confidence}% confidence
+                </span>` : '';
+            
+            contentSections.push(`
+                <div class="detail-section">
+                    <h4><i class="fas fa-envelope-open"></i> CEO Email Address</h4>
+                    <div class="links-grid">
+                        <a href="mailto:${companyData.ceo_email}" target="_blank" rel="noopener" class="link-item email-item">
+                            <div class="email-info">
+                                <div class="email-header">
+                                    <i class="fas fa-envelope"></i>
+                                    <span class="email-address">${companyData.ceo_email}</span>
+                                </div>
+                                <div class="email-confidence">${emailConfidenceDisplay}</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            `);
+        }
+        
         // No data found message
         if (contentSections.length === 1) { // Only company info section
             contentSections.push(`
@@ -865,6 +905,32 @@ class ContactFinderApp {
         };
         
         return iconMap[platform.toLowerCase()] || 'fas fa-link';
+    }
+    
+    /**
+     * Get email confidence CSS class
+     */
+    getEmailConfidenceClass(confidence) {
+        if (confidence >= 80) {
+            return 'confidence-badge confidence-high';
+        } else if (confidence >= 60) {
+            return 'confidence-badge confidence-medium';
+        } else {
+            return 'confidence-badge confidence-low';
+        }
+    }
+    
+    /**
+     * Get email confidence icon
+     */
+    getEmailConfidenceIcon(confidence) {
+        if (confidence >= 80) {
+            return 'fas fa-check-circle';
+        } else if (confidence >= 60) {
+            return 'fas fa-question-circle';
+        } else {
+            return 'fas fa-exclamation-circle';
+        }
     }
     
     /**
@@ -939,6 +1005,76 @@ class ContactFinderApp {
                     <i class="${conf.icon}"></i>
                     ${conf.text}
                 </span>`;
+    }
+    
+    /**
+     * Format email link
+     */
+    formatEmailLink(email) {
+        if (!email || email.trim() === '') {
+            return '<span class="text-muted">None</span>';
+        }
+        
+        // Truncate long emails for display
+        const displayEmail = email.length > 25 ? email.substring(0, 22) + '...' : email;
+        
+        return `<a href="mailto:${email}" class="profile-link email-link" title="Send email to ${email}">
+                    <i class="fas fa-envelope"></i> ${displayEmail}
+                </a>`;
+    }
+    
+    /**
+     * Format email confidence
+     */
+    formatEmailConfidence(confidence) {
+        if (!confidence || confidence === 0) {
+            return '<span class="text-muted">-</span>';
+        }
+        
+        let className = 'confidence-badge';
+        let icon = 'fas fa-question-circle';
+        
+        if (confidence >= 80) {
+            className += ' confidence-high';
+            icon = 'fas fa-check-circle';
+        } else if (confidence >= 60) {
+            className += ' confidence-medium';
+            icon = 'fas fa-exclamation-circle';
+        } else {
+            className += ' confidence-low';
+            icon = 'fas fa-times-circle';
+        }
+        
+        return `<span class="${className}" title="Email Validation Confidence: ${confidence}%">
+                    <i class="${icon}"></i>
+                    ${confidence}%
+                </span>`;
+    }
+    
+    /**
+     * Get email confidence CSS class
+     */
+    getEmailConfidenceClass(confidence) {
+        if (confidence >= 80) {
+            return 'confidence-badge confidence-high';
+        } else if (confidence >= 60) {
+            return 'confidence-badge confidence-medium';
+        } else {
+            return 'confidence-badge confidence-low';
+        }
+    }
+    
+    /**
+     * Get email confidence icon
+     */
+    getEmailConfidenceIcon(confidence) {
+        if (confidence >= 80) {
+            return 'fas fa-check-circle';
+        } else if (confidence >= 60) {
+            return 'fas fa-exclamation-circle';
+        } else {
+            return 'fas fa-times-circle';
+        }
     }
 }
 

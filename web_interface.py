@@ -133,6 +133,8 @@ class ProcessingSession:
                 'CEO Twitter/X',
                 'CEO Instagram',
                 'CEO TikTok',
+                'CEO Email',
+                'Email Confidence',
                 'Search Method',
                 'Search Confidence',
                 'Processing Status',
@@ -188,6 +190,8 @@ class ProcessingSession:
                         twitter_url,
                         instagram_url,
                         tiktok_url,
+                        ceo_data.get('ceo_email', ''),
+                        f"{ceo_data.get('email_confidence', 0)}%" if ceo_data.get('email_confidence', 0) > 0 else '',
                         ceo_data.get('search_method', 'Unknown'),
                         ceo_data.get('search_confidence', 'Unknown'),
                         'Success' if result.get('success') else 'Failed',
@@ -510,6 +514,8 @@ def process_companies_background(session_id):
                             'twitter_url': twitter_url,
                             'instagram_url': instagram_url,
                             'tiktok_url': tiktok_url,
+                            'ceo_email': result.get('ceo_data', {}).get('ceo_email', ''),
+                            'email_confidence': result.get('ceo_data', {}).get('email_confidence', 0),
                             'emails_found': emails,
                             'phones_found': phones,
                             'social_links_found': list(social_links.keys()) if social_links else [],
@@ -817,6 +823,8 @@ def get_company_details(session_id, company_domain):
             'timestamp': datetime.fromtimestamp(company_result.get('timestamp', time.time())).strftime('%Y-%m-%d %H:%M:%S'),
             'processing_status': 'Success' if company_result.get('success') else 'Failed',
             'details': all_links,
+            'ceo_email': ceo_data.get('ceo_email', ''),
+            'email_confidence': ceo_data.get('email_confidence', 0),
             'errors': company_result.get('errors', [])
         })
         

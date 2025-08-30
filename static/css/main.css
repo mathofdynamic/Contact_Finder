@@ -97,9 +97,9 @@ body {
 }
 
 .container {
-    max-width: 1200px;
+    width: 95%;
     margin: 0 auto;
-    padding: 0 var(--space-4);
+    padding: 0 var(--space-2);
 }
 
 .gradient-text {
@@ -215,9 +215,22 @@ body {
     border-color: var(--gray-400);
 }
 
+.btn-outline.ml-2 {
+    min-width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
 .btn-sm {
     padding: var(--space-2) var(--space-3);
     font-size: var(--font-size-xs);
+}
+
+.btn-sm i {
+    font-size: var(--font-size-sm);
 }
 
 .btn-lg {
@@ -553,17 +566,19 @@ body {
     background: var(--white);
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-md);
-    overflow: hidden;
+    overflow-x: auto;
+    width: 100%;
 }
 
 .results-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
 .results-table th {
     background: var(--gray-50);
-    padding: var(--space-4);
+    padding: var(--space-3) var(--space-4);
     text-align: left;
     font-weight: 600;
     color: var(--gray-700);
@@ -572,9 +587,12 @@ body {
 }
 
 .results-table td {
-    padding: var(--space-4);
+    padding: var(--space-3) var(--space-4);
     border-bottom: var(--border-width) solid var(--gray-100);
     font-size: var(--font-size-sm);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 200px; /* Limit the width of cells */
 }
 
 .results-table tbody tr {
@@ -729,8 +747,9 @@ body {
 
 /* Company Details Modal Specific Styles */
 .company-details-modal {
-    max-width: 800px;
+    max-width: 900px;
     max-height: 90vh;
+    width: 90%;
 }
 
 .modal-header {
@@ -779,6 +798,7 @@ body {
 /* Detail Sections */
 .detail-section {
     margin-bottom: var(--space-8);
+    padding: var(--space-4) 0;
 }
 
 .detail-section:last-child {
@@ -816,7 +836,7 @@ body {
 .links-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: var(--space-3);
+    gap: var(--space-4);
 }
 
 .link-item {
@@ -1260,19 +1280,19 @@ body {
 .confidence-high {
     background: rgba(5, 150, 105, 0.1);
     color: #059669;
-    border: 1px solid rgba(5, 150, 105, 0.2);
+    border: 1px solid rgba(5, 150, 105, 0.3);
 }
 
 .confidence-medium {
     background: rgba(217, 119, 6, 0.1);
     color: #d97706;
-    border: 1px solid rgba(217, 119, 6, 0.2);
+    border: 1px solid rgba(217, 119, 6, 0.3);
 }
 
 .confidence-low {
     background: rgba(220, 38, 38, 0.1);
     color: #dc2626;
-    border: 1px solid rgba(220, 38, 38, 0.2);
+    border: 1px solid rgba(220, 38, 38, 0.3);
 }
 
 .confidence-badge i {
@@ -1318,13 +1338,33 @@ body {
     font-size: 0.75em;
 }
 
-/* Enhanced Results Table */
+/* Enhanced Results Table - Column Widths */
+.results-table th:nth-child(1) { /* Company */
+    min-width: 120px;
+}
+
+.results-table th:nth-child(2) { /* Status */
+    width: 80px;
+}
+
 .results-table th:nth-child(3) { /* Search Method */
-    width: 120px;
+    width: 110px;
 }
 
 .results-table th:nth-child(4) { /* Confidence */
-    width: 100px;
+    width: 90px;
+}
+
+.results-table th:nth-child(10) { /* CEO Email */
+    min-width: 160px;
+}
+
+.results-table th:nth-child(11) { /* Email Confidence */
+    width: 120px;
+}
+
+.results-table th:nth-child(12) { /* Actions */
+    width: 80px;
 }
 
 .results-table td:nth-child(3),
@@ -1384,8 +1424,54 @@ body {
     transform: translateY(-1px);
 }
 
+.email-link {
+    background: rgba(34, 197, 94, 0.1);
+    color: #059669;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.email-link:hover {
+    background: #059669;
+    color: var(--white);
+}
+
 .profile-link i {
     font-size: 0.75em;
+}
+
+/* Email Item in Company Details Modal */
+.email-item {
+    background: rgba(34, 197, 94, 0.05);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    transition: all 0.2s ease-in-out;
+}
+
+.email-item:hover {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: rgba(34, 197, 94, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(34, 197, 94, 0.1);
+}
+
+.email-info {
+    width: 100%;
+}
+
+.email-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-1);
+}
+
+.email-address {
+    font-weight: 600;
+    color: #059669;
+}
+
+.email-confidence {
+    font-size: var(--font-size-sm);
+    color: var(--gray-600);
 }
 
 /* Enhanced Tooltips */

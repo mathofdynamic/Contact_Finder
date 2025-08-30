@@ -31,7 +31,33 @@ Contact Finder is a comprehensive web application that automatically discovers a
 - **Pause/Resume Functionality** for large batch processing
 - **Smart Captcha Handling** with automatic browser visibility
 - **Comprehensive CSV Export** with all discovered data
+- **Enhanced UI Experience** with optimized spacing and responsive design
+- **Smart Content Truncation** for better information display
+- **Detailed Company Information Cards** with eye icon access
 - **Mobile-Responsive Design** for processing on any device
+
+### 🌟 **Recent UI Improvements**
+
+#### 📌 **Enhanced Table Layout & Spacing**
+- **✨ Optimized Column Widths**: Each column sized perfectly for its content type
+- **💾 Smart Content Truncation**: Long emails and text automatically truncated with tooltips
+- **🌐 Responsive Table Container**: Horizontal scrolling only when necessary
+- **🎨 Better Visual Hierarchy**: Improved spacing between elements for easier scanning
+- **🌐 Adaptive Layout**: Tables adjust to different screen sizes and content types
+
+#### 👁️ **Improved Details View**
+- **👁️ Enhanced Eye Icon**: More prominent and accessible eye icon for details
+- **🌐 Wider Modal**: Expanded company details modal for better information display
+- **💾 Email Confidence Visualization**: Better indication of email verification confidence
+- **🎨 Rich Styling**: Improved visual styling for different information types
+- **🔍 Tooltips**: Hover tooltips for additional information
+
+#### 💻 **Technical Improvements**
+- **⚡ Better Performance**: Optimized rendering for large result sets
+- **📱 Mobile Enhancements**: Improved mobile experience with touch-friendly controls
+- **🛡️ Security Upgrades**: Enhanced validation for all user inputs
+- **💾 Memory Optimization**: Better handling of large datasets
+- **🔄 Smoother Animations**: Refined transitions and loading states
 
 ### 🤖 **Revolutionary AI Integration with Google Search Tool**
 
@@ -74,6 +100,17 @@ Contact Finder now features breakthrough AI integration with Google Gemini's Goo
 - 🔄 **Backward Compatibility**: Existing functionality preserved and enhanced
 
 ---
+
+### 📸 UI Improvements Showcase
+<div align="center">
+  <img src="https://github.com/mathofdynamic/Contact_Finder/blob/main/Screenshots/enhanced_ui_spacing.png" alt="Enhanced UI Spacing" width="800"/>
+  <p><em>Enhanced UI with improved spacing, readable table layout, and eye icon detail view</em></p>
+</div>
+
+<div align="center">
+  <img src="https://github.com/mathofdynamic/Contact_Finder/blob/main/Screenshots/company_details_modal.png" alt="Company Details Modal" width="800"/>
+  <p><em>Expanded company details modal with CEO email information and social profiles</em></p>
+</div>
 
 ## 🎥 Live Demo - Web Interface in Action
 
@@ -235,10 +272,13 @@ Contact Finder now features breakthrough AI integration with Google Gemini's Goo
 - **🎨 Modern UI/UX**: Professional design with smooth animations
 - **📱 Responsive Design**: Works perfectly on desktop, tablet, and mobile
 - **🔍 Smart Detection**: Automatically detects company domain/name columns
-- **👁️ View Details**: Clickable company details with modal interface
+- **👁️ View Details**: Clickable eye icon for detailed company information modal
 - **🛡️ Security**: File validation, session isolation, secure uploads
 - **⚡ Performance**: Background processing with thread isolation
 - **📈 Analytics**: Real-time statistics and success/error tracking
+- **💾 Optimized Data Display**: Smart truncation of long emails and text fields
+- **📈 Enhanced Table Layout**: Responsive table with optimal column widths
+- **🌐 Scrollable Interface**: Horizontal scrolling only when necessary
 
 ### 🔍 **Enhanced CEO Discovery** with Google Search Tool
 - **🤖 Real-Time Google Search**: Uses `google-genai` package for live web search
@@ -740,7 +780,46 @@ ANTI_DETECTION = True  # stealth mode enabled
     --warning: #d97706;     /* Warning states */
     --danger: #dc2626;      /* Error messages */
     --glow-intensity: 0.4;  /* Progress bar glow */
+    
+    /* Table layout customization */
+    --table-cell-padding: var(--space-3) var(--space-4);  /* Cell padding */
+    --table-min-width: 100%;  /* Table minimum width */
+    --container-width: 95%;   /* Container responsive width */
 }
+
+/* Customizing email display */
+.email-item {
+    background: rgba(34, 197, 94, 0.05);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    transition: all 0.2s ease-in-out;
+}
+
+/* Enhanced table column widths */
+.results-table th:nth-child(1) { /* Company */
+    min-width: 120px;
+}
+```
+
+**Smart Content Management:**
+```javascript
+// Email truncation for better display
+formatEmailLink(email) {
+    if (!email || email.trim() === '') {
+        return '<span class="text-muted">None</span>';
+    }
+    
+    // Truncate long emails for display
+    const displayEmail = email.length > 25 ? email.substring(0, 22) + '...' : email;
+    
+    return `<a href="mailto:${email}" class="profile-link email-link" title="Send email to ${email}">
+                <i class="fas fa-envelope"></i> ${displayEmail}
+            </a>`;
+}
+
+// Optimize display of multiple items
+const emails = detailedInfo.emails_found ? 
+    detailedInfo.emails_found.slice(0, 2).join(', ') + 
+    (detailedInfo.emails_found.length > 2 ? '...' : '') : 'None';
 ```
 
 **Security Settings:**
@@ -939,6 +1018,61 @@ SESSION_COOKIE_HTTPONLY=True
 - **Usage analytics**: API endpoint usage statistics
 
 ---
+
+## 📊 Layout & UI Optimization
+
+### 🌐 **Responsive Table Design**
+
+The latest update includes significant improvements to the table layout system:
+
+**Key Table Improvements:**
+- **💾 Optimized Column Widths**: Each column is precisely sized based on its content type
+- **🌐 Horizontal Scrolling**: Smart horizontal scrolling only when necessary
+- **💾 Text Truncation**: Long content is automatically truncated with tooltips
+- **👁️ Eye Icon Access**: Prominent eye icon for detailed company information
+- **🎨 Visual Enhancements**: Better spacing and typography for readability
+
+**Layout Configuration:**
+```css
+/* Table responsive design */
+.table-container {
+    overflow-x: auto;
+    width: 100%;
+}
+
+.results-table td {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 200px; /* Limit cell width */
+}
+```
+
+### 👁️ **Enhanced Company Details Modal**
+
+The company details modal has been expanded and enhanced:
+
+**Modal Improvements:**
+- **🌐 Wider Format**: Expanded to 900px for better content display
+- **🎨 Styled Email Items**: Special styling for email confidence display
+- **💾 Better Section Spacing**: Improved separation between information sections
+- **👁️ Enhanced Tooltips**: More informative tooltips on hover
+- **🌐 Responsive Design**: Adapts to different screen sizes
+
+**Modal Configuration:**
+```css
+/* Company Details Modal Enhancements */
+.company-details-modal {
+    max-width: 900px;
+    max-height: 90vh;
+    width: 90%;
+}
+
+.email-item {
+    background: rgba(34, 197, 94, 0.05);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    transition: all 0.2s ease-in-out;
+}
+```
 
 ## 🚀 Performance & Optimization
 

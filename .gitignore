@@ -1,36 +1,55 @@
+# Environment variables
 .env
-output_csvs/
+.env.*
 
-# Python cache and compiled files
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# macOS system files
-.DS_Store
-._*
-
-# Generated reports and data
-contact_finder_reports/
-
-# Cookie files (sensitive data)
+# Sensitive files
+*.cookie.json
 *_cookies.json
 google-cookie.json
 linkedin_cookies.json
-instagram_cookies.json
 
-# Logs and debug files
-*.log
-debug_*.png
+# Runtime directories
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.pytest_cache/
 
-# IDE and editor files
-.vscode/
+# IDE files
 .idea/
+.vscode/
 *.swp
 *.swo
 
-# Virtual environment
+# Dependency directories
 venv/
 env/
-.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Generated files
+uploads/
+progress_files/
+results/
+*.log
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Local test files
+test_*.py
+local_*.py
+
+# macOS
+.DS_Store
