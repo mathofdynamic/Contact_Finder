@@ -53,3 +53,8 @@ local_*.py
 
 # macOS
 .DS_Store
+._*
+.AppleDouble
+.LSOverride
+Icon
+Thumbs.db
