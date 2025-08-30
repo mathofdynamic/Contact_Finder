@@ -101,17 +101,6 @@ Contact Finder now features breakthrough AI integration with Google Gemini's Goo
 
 ---
 
-### 📸 UI Improvements Showcase
-<div align="center">
-  <img src="https://github.com/mathofdynamic/Contact_Finder/blob/main/Screenshots/enhanced_ui_spacing.png" alt="Enhanced UI Spacing" width="800"/>
-  <p><em>Enhanced UI with improved spacing, readable table layout, and eye icon detail view</em></p>
-</div>
-
-<div align="center">
-  <img src="https://github.com/mathofdynamic/Contact_Finder/blob/main/Screenshots/company_details_modal.png" alt="Company Details Modal" width="800"/>
-  <p><em>Expanded company details modal with CEO email information and social profiles</em></p>
-</div>
-
 ## 🎥 Live Demo - Web Interface in Action
 
 ### 📁 Input CSV File Format
